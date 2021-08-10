@@ -32,7 +32,6 @@ func FrequencyWithinBlockTest(bits []bool) float64 {
 		V += (Pi - 0.5) * (Pi - 0.5)
 	}
 	V *= 4.0 * float64(m)
-
 	P = igamc(float64(N)/2.0, V/2.0)
 	return P
 }

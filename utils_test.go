@@ -18,6 +18,7 @@ func TestB2bit(t *testing.T) {
 		{"单字节 8", 0x08, []bool{false, false, false, false, true, false, false, false}},
 		{"单字节 16", 0x0C, []bool{false, false, false, false, true, true, false, false}},
 		{"单字节 255", 0xFF, []bool{true, true, true, true, true, true, true, true}},
+		{"单字节 45", 0x2D, []bool{false, false, true, false, true, true, false, true}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
