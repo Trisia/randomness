@@ -5,9 +5,8 @@ import (
 	"testing"
 )
 
-func TestFrequencyWithinBlockTest(t *testing.T) {
-	//bits := GroupBit()
+func TestPokerTest(t *testing.T) {
 	bits := ReadGroup("data.bin")
-	p := FrequencyWithinBlockTest(bits)
+	p := PokerTest(bits)
 	fmt.Printf("n: 1000000, P-valye: %f\n", p)
 }

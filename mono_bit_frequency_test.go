@@ -50,9 +50,13 @@ func ReadGroup(filename string) []bool {
 }
 
 func TestGroupBit(t *testing.T) {
-	n := 1000_000
-	buf := make([]byte, n/8)
-
+	bits := GroupBit()
+	var tmp []bool
+	var buf []byte
+	for i := 0; i < len(bits)/8; i++ {
+		tmp, bits = bits[:8], bits[8:]
+		buf = append(buf, B2Byte(tmp))
+	}
 	_, _ = rand.Read(buf)
 	err := ioutil.WriteFile("data.bin", buf, os.ModePerm)
 	if err != nil {

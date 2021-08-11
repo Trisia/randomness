@@ -275,3 +275,19 @@ func B2bit(b byte) []bool {
 		b&0b00000001 > 0,
 	}
 }
+
+// B2Byte bool数组 转换为 字节
+func B2Byte(arr []bool) byte {
+	var res byte = 0
+	var v byte = 0
+	for _, b := range arr {
+		res <<= 1
+		if b {
+			v = 1
+		} else {
+			v = 0
+		}
+		res += v
+	}
+	return res
+}

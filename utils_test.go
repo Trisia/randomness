@@ -28,3 +28,27 @@ func TestB2bit(t *testing.T) {
 		})
 	}
 }
+
+func TestB2Byte(t *testing.T) {
+
+	tests := []struct {
+		name string
+		args []bool
+		want byte
+	}{
+		{"单字节 1  ", []bool{false, false, false, false, false, false, false, true}, 0x01},
+		{"单字节 2  ", []bool{false, false, false, false, false, false, true, false}, 0x02},
+		{"单字节 4  ", []bool{false, false, false, false, false, true, false, false}, 0x04},
+		{"单字节 8  ", []bool{false, false, false, false, true, false, false, false}, 0x08},
+		{"单字节 16 ", []bool{false, false, false, false, true, true, false, false}, 0x0C},
+		{"单字节 255", []bool{true, true, true, true, true, true, true, true}, 0xFF},
+		{"单字节 45 ", []bool{false, false, true, false, true, true, false, true}, 0x2D},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := B2Byte(tt.args); got != tt.want {
+				t.Errorf("B2Byte() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
