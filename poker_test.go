@@ -8,5 +8,5 @@ import (
 func TestPokerTest(t *testing.T) {
 	bits := ReadGroup("data.bin")
 	p := PokerTest(bits)
-	fmt.Printf("n: 1000000, P-valye: %f\n", p)
+	fmt.Printf("n: 1000000, P-value: %f\n", p)
 }

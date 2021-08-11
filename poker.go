@@ -11,7 +11,10 @@ func PokerTest(bits []bool) float64 {
 		return -1
 	}
 	var m int = 8
-	patterns := make([]int, 1<<m)
+	// 2^m
+	_2m := 1 << m
+
+	patterns := make([]int, _2m)
 	N := n / m
 	var V float64 = 0
 	var P float64 = 0
@@ -29,8 +32,7 @@ func PokerTest(bits []bool) float64 {
 		}
 		patterns[tmp]++
 	}
-	// 2^m
-	_2m := int(1 << m)
+
 	for i := 0; i < _2m; i++ {
 		V += float64(patterns[i]) * float64(patterns[i])
 	}
