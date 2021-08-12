@@ -1,6 +1,9 @@
 package randomness
 
 import (
+	"crypto/rand"
+	"io/ioutil"
+	"os"
 	"reflect"
 	"testing"
 )
@@ -50,5 +53,23 @@ func TestB2Byte(t *testing.T) {
 				t.Errorf("B2Byte() = %v, want %v", got, tt.want)
 			}
 		})
+	}
+}
+
+func TestGroupBit(t *testing.T) {
+	bits := GroupBit()
+	var tmp []bool
+	var buf []byte
+	for {
+		if len(bits) < 8 {
+			break
+		}
+		tmp, bits = bits[:8], bits[8:]
+		buf = append(buf, B2Byte(tmp))
+	}
+	_, _ = rand.Read(buf)
+	err := ioutil.WriteFile("data.bin", buf, os.ModePerm)
+	if err != nil {
+		t.Fatal(err)
 	}
 }

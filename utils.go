@@ -1,6 +1,11 @@
 package randomness
 
-import "math"
+import (
+	"io/ioutil"
+	"math"
+	"math/rand"
+	"time"
+)
 
 const (
 	MAXLOG float64 = 7.09782712893383996732224e2 // log(MAXNUM)
@@ -290,4 +295,70 @@ func B2Byte(arr []bool) byte {
 		res += v
 	}
 	return res
+}
+
+func xor(x, y bool) bool {
+	return x != y
+}
+
+func max(x, y int) int {
+	if x > y {
+		return x
+	}
+	return y
+}
+
+func abs(x int) int {
+	if x > 0 {
+		return x
+	}
+	return -x
+}
+
+func min(x, y int) int {
+	if x < y {
+		return x
+	}
+	return y
+}
+
+func GroupBit() []bool {
+	n := 1000_000
+	bits := make([]bool, 0, n)
+	rand.Seed(time.Now().Unix())
+	for i := 0; i < n; i++ {
+		if rand.Int()%2 == 1 {
+			bits = append(bits, true)
+		} else {
+			bits = append(bits, false)
+		}
+	}
+	return bits
+}
+
+// GroupSecBit 生成一组测试数据 长度为 10^6 比特
+func GroupSecBit() []bool {
+	n := 1000_000
+	bits := make([]bool, 0, n)
+
+	buf := make([]byte, n/8)
+	_, _ = rand.Read(buf)
+	for _, b := range buf {
+		bits = append(bits, B2bit(b)...)
+	}
+	return bits
+}
+
+// ReadGroup 从文件中读取一组二元序列
+func ReadGroup(filename string) []bool {
+	n := 1000_000
+	bits := make([]bool, 0, n)
+	buf, err := ioutil.ReadFile(filename)
+	if err != nil {
+		panic(err)
+	}
+	for _, b := range buf {
+		bits = append(bits, B2bit(b)...)
+	}
+	return bits
 }
