@@ -322,6 +322,16 @@ func min(x, y int) int {
 	return y
 }
 
+// B2bitArr 转换字节数组为比特序列
+func B2bitArr(src []byte) []bool {
+	res := make([]bool, 0, len(src)*8)
+	for _, b := range src {
+		res = append(res, B2bit(b)...)
+	}
+	return res
+}
+
+// GroupBit 生成一组 10^6 比特的监测序列
 func GroupBit() []bool {
 	n := 1000_000
 	bits := make([]bool, 0, n)
