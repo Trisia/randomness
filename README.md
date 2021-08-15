@@ -16,12 +16,6 @@ go get -u github.com/Trisia/randomness
 ```
 
 ```go
-import (
-	"crypto/rand"
-	"fmt"
-	"randomness"
-)
-
 func main() {
 	// 产生随机数序列
 	n := 1000_000
@@ -36,7 +30,6 @@ func main() {
 }
 ```
 
-> [test/demo.go]()
 
 ## 概述
 
