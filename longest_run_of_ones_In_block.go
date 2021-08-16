@@ -16,15 +16,26 @@ import (
 
 var pi = []float64{0.0882, 0.2092, 0.2483, 0.1933, 0.1208, 0.0675, 0.0727}
 
-// LongestRunOfOnesInABlockTest 块内最大“1”游程检测
+// LongestRunOfOnesInABlockTest 块内最大“1”游程检测,m=10000
 func LongestRunOfOnesInABlockTest(bits []bool) float64 {
+	return LongestRunOfOnesInABlockProto(bits, 10000)
+}
+
+// LongestRunOfOnesInABlockTestBytes 块内最大“1”游程检测
+func LongestRunOfOnesInABlockTestBytes(data []byte, m int) float64 {
+	return LongestRunOfOnesInABlockProto(B2bitArr(data), m)
+}
+
+// LongestRunOfOnesInABlockProto 块内最大“1”游程检测
+// bits: 待检测序列
+// m: m长度， m = 10000
+func LongestRunOfOnesInABlockProto(bits []bool, m int) float64 {
 	n := len(bits)
 
 	if n < 10000 {
 		fmt.Println("testForTheLongestRunOfOnesInABlock:args wrong")
 		return -1
 	}
-	m := 10000
 	N := n / m
 	v := make([]float64, 7)
 	var V float64 = 0

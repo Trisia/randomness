@@ -14,14 +14,23 @@ import (
 	"fmt"
 )
 
-// FrequencyWithinBlockTest 块内频数检测
+// FrequencyWithinBlockTest 块内频数检测, m = 100
 func FrequencyWithinBlockTest(bits []bool) float64 {
+	return FrequencyWithinBlockProto(bits, 100)
+}
+
+// FrequencyWithinBlockTestBytes 块内频数检测
+func FrequencyWithinBlockTestBytes(data []byte, m int) float64 {
+	return FrequencyWithinBlockProto(B2bitArr(data), m)
+}
+
+// FrequencyWithinBlockProto 块内频数检测
+func FrequencyWithinBlockProto(bits []bool, m int) float64 {
 	n := len(bits)
 	if n == 0 {
 		fmt.Println("FrequencyTestWithinABlock:args wrong")
 		return -1
 	}
-	m := 100
 	N := n / m
 	bits = bits[:N*m]
 

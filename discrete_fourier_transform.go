@@ -17,6 +17,11 @@ import (
 	"math/cmplx"
 )
 
+// DiscreteFourierTransformTestBytes 离散傅里叶检测
+func DiscreteFourierTransformTestBytes(data []byte) float64 {
+	return DiscreteFourierTransformTest(B2bitArr(data))
+}
+
 // DiscreteFourierTransformTest 离散傅里叶检测
 func DiscreteFourierTransformTest(bits []bool) float64 {
 	n := len(bits)

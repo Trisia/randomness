@@ -15,14 +15,27 @@ import (
 	"math"
 )
 
-// BinaryDerivativeTest 二元推导检测
+// BinaryDerivativeTest 二元推导检测， k=7
 func BinaryDerivativeTest(bits []bool) float64 {
+	return BinaryDerivativeProto(bits, 7)
+}
+
+// BinaryDerivativeTestBytes 二元推导检测
+// bits: 待检测序列
+// k: 重复次数，k=3,7
+func BinaryDerivativeTestBytes(data []byte, k int) float64 {
+	return BinaryDerivativeProto(B2bitArr(data), k)
+}
+
+// BinaryDerivativeProto 二元推导检测
+// bits: 待检测序列
+// k: 重复次数，k=3,7
+func BinaryDerivativeProto(bits []bool, k int) float64 {
 	n := len(bits)
 	if n < 7 {
 		fmt.Println("BinaryDerivativeTest:args wrong")
 		return -1
 	}
-	k := 7
 
 	S := 0
 	var V float64 = 0

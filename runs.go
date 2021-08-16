@@ -15,6 +15,11 @@ import (
 	"math"
 )
 
+// RunsTestBytes 游程总数检测
+func RunsTestBytes(data []byte) float64 {
+	return RunsTest(B2bitArr(data))
+}
+
 // RunsTest 游程总数检测
 func RunsTest(bits []bool) float64 {
 	n := len(bits)

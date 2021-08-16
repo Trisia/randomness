@@ -15,12 +15,17 @@ import (
 	"math"
 )
 
-func Mut_factor_C(L, K int) float64 {
+func mutFactorC(L, K int) float64 {
 	var v float64
 	v = 0.7
 	v -= 0.8 / float64(L)
 	v += (4.0 + 32.0/float64(L)) * (math.Pow(float64(K), -3.0/float64(L)) / 15.0)
 	return v
+}
+
+// MaurerUniversalTestBytes Maurer通用统计检测方法
+func MaurerUniversalTestBytes(data []byte) float64 {
+	return MaurerUniversalTest(B2bitArr(data))
 }
 
 // MaurerUniversalTest Maurer通用统计检测方法
@@ -72,7 +77,7 @@ func MaurerUniversalTest(bits []bool) float64 {
 		T[tmp&mask] = i
 	}
 
-	sigma = math.Sqrt(variance[L]/float64(K)) * Mut_factor_C(L, K)
+	sigma = math.Sqrt(variance[L]/float64(K)) * mutFactorC(L, K)
 	V = (sum/float64(K) - expected_value[L]) / sigma
 	P = math.Erfc(math.Abs(V) / math.Sqrt(2.0))
 

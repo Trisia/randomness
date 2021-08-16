@@ -15,14 +15,27 @@ import (
 	"math"
 )
 
-// AutocorrelationTest 自相关检测
+// AutocorrelationTest 自相关检测,d=16
 func AutocorrelationTest(bits []bool) float64 {
+	return AutocorrelationProto(bits, 16)
+}
+
+// AutocorrelationTestBytes 自相关检测
+// data: 待检测序列
+// d: d=1,2,8,16
+func AutocorrelationTestBytes(data []byte, d int) float64 {
+	return AutocorrelationProto(B2bitArr(data), d)
+}
+
+// AutocorrelationProto 自相关检测
+// bits: 待检测序列
+// d: d=1,2,8,16
+func AutocorrelationProto(bits []bool, d int) float64 {
 	n := len(bits)
 	if n < 16 {
 		fmt.Println("AutocorrelationTest:args wrong")
 		return -1
 	}
-	d := 16
 
 	Ad := 0
 	var V float64 = 0

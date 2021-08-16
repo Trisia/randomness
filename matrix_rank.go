@@ -15,15 +15,26 @@ import (
 	"math"
 )
 
-// MatrixRankTest 矩阵秩检测
+// MatrixRankTest 矩阵秩检测,M=Q=32
 func MatrixRankTest(bits []bool) float64 {
+	return MatrixRankProto(bits, 32, 32)
+}
+
+// MatrixRankTestBytes 矩阵秩检测
+func MatrixRankTestBytes(data []byte, M, Q int) float64 {
+	return MatrixRankProto(B2bitArr(data), M, Q)
+}
+
+// MatrixRankProto 矩阵秩检测
+// bits: 待检测序列
+// M: 矩阵行数
+// Q: 矩阵列隶属
+func MatrixRankProto(bits []bool, M, Q int) float64 {
 	n := len(bits)
 	if n == 0 {
 		fmt.Println("BinaryMatrixRankTest:args wrong")
 		return -1
 	}
-	M := 32
-	Q := 32
 
 	N := n / (M * Q)
 	//int n_disc = n % (M * Q);

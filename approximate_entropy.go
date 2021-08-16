@@ -15,14 +15,25 @@ import (
 	"math"
 )
 
-// ApproximateEntropyTest 近似熵检测
+// ApproximateEntropyTest 近似熵检测,m=5
 func ApproximateEntropyTest(bits []bool) float64 {
+	return ApproximateEntropyProto(bits, 5)
+}
+
+// ApproximateEntropyTestBytes 近似熵检测
+func ApproximateEntropyTestBytes(data []byte, m int) float64 {
+	return ApproximateEntropyProto(B2bitArr(data), m)
+}
+
+// ApproximateEntropyProto 近似熵检测
+// bits: 待检测序列
+// m: m长度
+func ApproximateEntropyProto(bits []bool, m int) float64 {
 	n := len(bits)
 	if n == 0 {
 		fmt.Println("ApproximateEntropyTest:error")
 		return -1
 	}
-	m := 5
 	bits2 := bits
 	var pattern []int
 	var mask int

@@ -12,6 +12,11 @@ package randomness
 
 import "fmt"
 
+// RunsDistributionTestBytes 游程分布检测
+func RunsDistributionTestBytes(data []byte) float64 {
+	return RunsDistributionTest(B2bitArr(data))
+}
+
 // RunsDistributionTest 游程分布检测
 func RunsDistributionTest(bits []bool) float64 {
 	n := len(bits)

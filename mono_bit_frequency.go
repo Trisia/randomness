@@ -15,6 +15,11 @@ import (
 	"math"
 )
 
+// MonoBitFrequencyTestBytes 单比特频数检测
+func MonoBitFrequencyTestBytes(data []byte) float64 {
+	return MonoBitFrequencyTest(B2bitArr(data))
+}
+
 // MonoBitFrequencyTest 单比特频数检测
 func MonoBitFrequencyTest(bits []bool) float64 {
 	if len(bits) == 0 {

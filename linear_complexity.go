@@ -15,15 +15,28 @@ import (
 	"math"
 )
 
-// LinearComplexityTest 线型复杂度检测
+// LinearComplexityTest 线型复杂度检测,m=500
 func LinearComplexityTest(bits []bool) float64 {
+	return LinearComplexityProto(bits, 500)
+}
+
+// LinearComplexityTestBytes 线型复杂度检测
+// data: 待检测序列
+// m: m长度
+func LinearComplexityTestBytes(data []byte, m int) float64 {
+	return LinearComplexityProto(B2bitArr(data), m)
+}
+
+// LinearComplexityProto 线型复杂度检测
+// bits: 待检测序列
+// m: m长度
+func LinearComplexityProto(bits []bool, m int) float64 {
 	n := len(bits)
 
 	if n == 0 {
 		fmt.Println("LinearComplexityTest:args wrong")
 		return -1
 	}
-	m := 500
 
 	N := n / m
 

@@ -12,15 +12,28 @@ package randomness
 
 import "fmt"
 
-// PokerTest 扑克检测
+// PokerTest 扑克检测，m=8
 func PokerTest(bits []bool) float64 {
+	return PokerProto(bits, 8)
+}
+
+// PokerTestBytes 扑克检测
+// data: 检测序列
+// m: m长度，m=4,8
+func PokerTestBytes(data []byte, m int) float64 {
+	return PokerProto(B2bitArr(data), m)
+}
+
+// PokerProto 扑克检测
+// bits: 检测序列
+// m: m长度，m=4,8
+func PokerProto(bits []bool, m int) float64 {
 	n := len(bits)
 
 	if n < 8 {
 		fmt.Println("PokerTest:args wrong")
 		return -1
 	}
-	var m int = 8
 	// 2^m
 	_2m := 1 << m
 
