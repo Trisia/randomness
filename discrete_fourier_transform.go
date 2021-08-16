@@ -12,9 +12,9 @@ package randomness
 
 import (
 	"fmt"
+	"github.com/Trisia/randomness/ttf"
 	"math"
 	"math/cmplx"
-	"randomness/ttf"
 )
 
 // DiscreteFourierTransformTest 离散傅里叶检测
