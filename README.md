@@ -30,6 +30,14 @@ func main() {
 }
 ```
 
+产品检测方法：
+
+- 出厂检测 [detect.FactoryDetect](detect/detect.go)
+- 上电检测 [detect.PowerOnDetect](detect/detect.go)
+- 周期检测 [detect.PeriodDetect](detect/detect.go)
+- 单次检测 [detect.SingleDetect](detect/detect.go)
+
+使用方法见 [测试用例](detect/detect_test.go)
 
 ## 概述
 
