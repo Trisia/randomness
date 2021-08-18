@@ -15,6 +15,12 @@ import (
 	"math"
 )
 
+// MatrixRank 矩阵秩检测,M=Q=32
+func MatrixRank(data []byte) *TestResult {
+	p := MatrixRankTestBytes(data, 32, 32)
+	return &TestResult{Name: "矩阵秩检测", P: p, Pass: p >= Alpha}
+}
+
 // MatrixRankTest 矩阵秩检测,M=Q=32
 func MatrixRankTest(bits []bool) float64 {
 	return MatrixRankProto(bits, 32, 32)

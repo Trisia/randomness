@@ -16,6 +16,12 @@ import (
 
 var pi = []float64{0.0882, 0.2092, 0.2483, 0.1933, 0.1208, 0.0675, 0.0727}
 
+// LongestRunOfOnesInABlock 块内最大“1”游程检测,m=10000
+func LongestRunOfOnesInABlock(data []byte) *TestResult {
+	p := LongestRunOfOnesInABlockTestBytes(data, 10000)
+	return &TestResult{Name: "块内最大“1”游程检测", P: p, Pass: p >= Alpha}
+}
+
 // LongestRunOfOnesInABlockTest 块内最大“1”游程检测,m=10000
 func LongestRunOfOnesInABlockTest(bits []bool) float64 {
 	return LongestRunOfOnesInABlockProto(bits, 10000)

@@ -14,6 +14,12 @@ import (
 	"fmt"
 )
 
+// FrequencyWithinBlock 块内频数检测, m = 100
+func FrequencyWithinBlock(data []byte) *TestResult {
+	p := FrequencyWithinBlockTestBytes(data, 100)
+	return &TestResult{Name: "块内频数检测", P: p, Pass: p >= Alpha}
+}
+
 // FrequencyWithinBlockTest 块内频数检测, m = 100
 func FrequencyWithinBlockTest(bits []bool) float64 {
 	return FrequencyWithinBlockProto(bits, 100)

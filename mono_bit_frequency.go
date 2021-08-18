@@ -15,6 +15,12 @@ import (
 	"math"
 )
 
+// MonoBitFrequency 单比特频数检测
+func MonoBitFrequency(data []byte) *TestResult {
+	p := MonoBitFrequencyTestBytes(data)
+	return &TestResult{Name: "单比特频数检测", P: p, Pass: p >= Alpha}
+}
+
 // MonoBitFrequencyTestBytes 单比特频数检测
 func MonoBitFrequencyTestBytes(data []byte) float64 {
 	return MonoBitFrequencyTest(B2bitArr(data))

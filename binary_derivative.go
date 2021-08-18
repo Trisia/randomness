@@ -15,6 +15,12 @@ import (
 	"math"
 )
 
+// BinaryDerivative 二元推导检测， k=7
+func BinaryDerivative(data []byte) *TestResult {
+	p := BinaryDerivativeTestBytes(data, 7)
+	return &TestResult{Name: "二元推导检测", P: p, Pass: p >= Alpha}
+}
+
 // BinaryDerivativeTest 二元推导检测， k=7
 func BinaryDerivativeTest(bits []bool) float64 {
 	return BinaryDerivativeProto(bits, 7)

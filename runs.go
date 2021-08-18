@@ -15,6 +15,12 @@ import (
 	"math"
 )
 
+// Runs 游程总数检测
+func Runs(data []byte) *TestResult {
+	p := RunsTestBytes(data)
+	return &TestResult{Name: "游程总数检测", P: p, Pass: p >= Alpha}
+}
+
 // RunsTestBytes 游程总数检测
 func RunsTestBytes(data []byte) float64 {
 	return RunsTest(B2bitArr(data))

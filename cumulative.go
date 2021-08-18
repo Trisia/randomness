@@ -15,6 +15,12 @@ import (
 	"math"
 )
 
+// Cumulative 累加和检测
+func Cumulative(data []byte) *TestResult {
+	p := CumulativeTestBytes(data)
+	return &TestResult{Name: "累加和检测", P: p, Pass: p >= Alpha}
+}
+
 // CumulativeTestBytes 累加和检测
 func CumulativeTestBytes(data []byte) float64 {
 	return CumulativeTest(B2bitArr(data))

@@ -15,6 +15,12 @@ import (
 	"math"
 )
 
+// LinearComplexity 线型复杂度检测,m=500
+func LinearComplexity(data []byte) *TestResult {
+	p := LinearComplexityTestBytes(data, 500)
+	return &TestResult{Name: "线型复杂度检测", P: p, Pass: p >= Alpha}
+}
+
 // LinearComplexityTest 线型复杂度检测,m=500
 func LinearComplexityTest(bits []bool) float64 {
 	return LinearComplexityProto(bits, 500)

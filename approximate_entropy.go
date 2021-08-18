@@ -15,6 +15,12 @@ import (
 	"math"
 )
 
+// ApproximateEntropy 近似熵检测,m=5
+func ApproximateEntropy(data []byte) *TestResult {
+	p := ApproximateEntropyTestBytes(data, 5)
+	return &TestResult{Name: "近似熵检测", P: p, Pass: p >= Alpha}
+}
+
 // ApproximateEntropyTest 近似熵检测,m=5
 func ApproximateEntropyTest(bits []bool) float64 {
 	return ApproximateEntropyProto(bits, 5)

@@ -23,6 +23,12 @@ func mutFactorC(L, K int) float64 {
 	return v
 }
 
+// MaurerUniversal Maurer通用统计检测方法
+func MaurerUniversal(data []byte) *TestResult {
+	p := MaurerUniversalTestBytes(data)
+	return &TestResult{Name: "Maurer通用统计检测方法", P: p, Pass: p >= Alpha}
+}
+
 // MaurerUniversalTestBytes Maurer通用统计检测方法
 func MaurerUniversalTestBytes(data []byte) float64 {
 	return MaurerUniversalTest(B2bitArr(data))

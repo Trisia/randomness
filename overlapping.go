@@ -15,6 +15,16 @@ import (
 	"math"
 )
 
+// OverlappingTemplateMatching 重叠子序列检测方法,m=5
+func OverlappingTemplateMatching(data []byte) *TestResult {
+	p1, p2 := OverlappingTemplateMatchingTestBytes(data, 5)
+	return &TestResult{
+		Name: "重叠子序列检测方法",
+		P:    p1, P2: p2,
+		Pass: math.Min(p1, p2) >= Alpha,
+	}
+}
+
 // OverlappingTemplateMatchingTest 重叠子序列检测方法,m=5
 // bits: 检测序列
 // return:

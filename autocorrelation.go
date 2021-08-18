@@ -15,6 +15,12 @@ import (
 	"math"
 )
 
+// Autocorrelation 自相关检测,d=16
+func Autocorrelation(data []byte) *TestResult {
+	p := AutocorrelationTestBytes(data, 16)
+	return &TestResult{Name: "自相关检测", P: p, Pass: p >= Alpha}
+}
+
 // AutocorrelationTest 自相关检测,d=16
 func AutocorrelationTest(bits []bool) float64 {
 	return AutocorrelationProto(bits, 16)

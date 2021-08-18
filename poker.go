@@ -12,6 +12,12 @@ package randomness
 
 import "fmt"
 
+// Poker 扑克检测，m=8
+func Poker(data []byte) *TestResult {
+	p := PokerTestBytes(data, 8)
+	return &TestResult{Name: "扑克检测", P: p, Pass: p >= Alpha}
+}
+
 // PokerTest 扑克检测，m=8
 func PokerTest(bits []bool) float64 {
 	return PokerProto(bits, 8)

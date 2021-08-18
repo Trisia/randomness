@@ -17,6 +17,12 @@ import (
 	"math/cmplx"
 )
 
+// DiscreteFourierTransform 离散傅里叶检测
+func DiscreteFourierTransform(data []byte) *TestResult {
+	p := DiscreteFourierTransformTestBytes(data)
+	return &TestResult{Name: "离散傅里叶检测", P: p, Pass: p >= Alpha}
+}
+
 // DiscreteFourierTransformTestBytes 离散傅里叶检测
 func DiscreteFourierTransformTestBytes(data []byte) float64 {
 	return DiscreteFourierTransformTest(B2bitArr(data))

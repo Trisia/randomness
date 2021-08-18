@@ -12,6 +12,12 @@ package randomness
 
 import "fmt"
 
+// RunsDistribution 游程分布检测
+func RunsDistribution(data []byte) *TestResult {
+	p := RunsDistributionTestBytes(data)
+	return &TestResult{Name: "游程分布检测", P: p, Pass: p >= Alpha}
+}
+
 // RunsDistributionTestBytes 游程分布检测
 func RunsDistributionTestBytes(data []byte) float64 {
 	return RunsDistributionTest(B2bitArr(data))
