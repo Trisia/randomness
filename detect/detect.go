@@ -91,7 +91,6 @@ func PeriodDetect(source io.Reader) (bool, error) {
 }
 
 // SingleDetect 单次检测，单根据实际应用时每次才随机数的大小确定，检测采用扑克检测
-// 不通过时，允许重复一次随机数采集与检测
 // source: 随机源
 // numByte: 采集字节数，不能小于16
 func SingleDetect(source io.Reader, numByte int) (bool, error) {
@@ -111,14 +110,6 @@ func SingleDetect(source io.Reader, numByte int) (bool, error) {
 		m = 8
 	}
 	p := randomness.PokerTestBytes(data, m)
-	if p < randomness.Alpha {
-		_, err = source.Read(data)
-		if err != nil {
-			return false, err
-		}
-		// 运行重复1次随机数采集与检测
-		p = randomness.PokerTestBytes(data, m)
-	}
 	return p >= randomness.Alpha, nil
 }
 
