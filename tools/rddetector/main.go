@@ -28,47 +28,36 @@ func worker(jobs <-chan string, out chan<- *R) {
 		arr := make([]float64, 16)
 
 		p := randomness.MonoBitFrequencyTest(bits)
-		arr[0] = p
+		arr = append(arr, p)
 		p = randomness.FrequencyWithinBlockTest(bits)
-		arr[1] = p
+		arr = append(arr, p)
 		p = randomness.PokerTest(bits)
-		arr[2] = p
+		arr = append(arr, p)
 		p1, p2 := randomness.OverlappingTemplateMatchingTest(bits)
-		arr[3] = p1
-		arr[4] = p2
-
+		arr = append(arr, p1, p2)
 		p = randomness.RunsTest(bits)
-		arr[5] = p
-
+		arr = append(arr, p)
 		p = randomness.RunsDistributionTest(bits)
-		arr[6] = p
-
+		arr = append(arr, p)
 		p = randomness.LongestRunOfOnesInABlockTest(bits)
-		arr[8] = p
-
+		arr = append(arr, p)
 		p = randomness.BinaryDerivativeTest(bits)
-		arr[9] = p
-
+		arr = append(arr, p)
 		p = randomness.AutocorrelationTest(bits)
-		arr[10] = p
-
+		arr = append(arr, p)
 		p = randomness.MatrixRankTest(bits)
-		arr[10] = p
-
+		arr = append(arr, p)
 		p = randomness.CumulativeTest(bits)
-		arr[11] = p
-
+		arr = append(arr, p)
 		p = randomness.ApproximateEntropyTest(bits)
-		arr[12] = p
-
+		arr = append(arr, p)
 		p = randomness.LinearComplexityTest(bits)
-		arr[13] = p
-
+		arr = append(arr, p)
 		p = randomness.MaurerUniversalTest(bits)
-		arr[14] = p
-
+		arr = append(arr, p)
 		p = randomness.DiscreteFourierTransformTest(bits)
-		arr[15] = p
+		arr = append(arr, p)
+
 		fmt.Printf(">> 文件 %s 测试结束.\n", filename)
 		go func() {
 			out <- &R{path.Base(filename), arr}
