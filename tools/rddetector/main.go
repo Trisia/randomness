@@ -25,8 +25,7 @@ func worker(jobs <-chan string, out chan<- *R) {
 		buf, _ := ioutil.ReadFile(filename)
 		bits := randomness.B2bitArr(buf)
 		buf = nil
-		arr := make([]float64, 16)
-
+		arr := make([]float64, 0, 16)
 		p := randomness.MonoBitFrequencyTest(bits)
 		arr = append(arr, p)
 		p = randomness.FrequencyWithinBlockTest(bits)
