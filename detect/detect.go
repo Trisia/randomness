@@ -119,7 +119,7 @@ func SingleDetect(source io.Reader, numByte int) (bool, error) {
 		// 运行重复1次随机数采集与检测
 		p = randomness.PokerTestBytes(data, m)
 	}
-	return p > randomness.Alpha, nil
+	return p >= randomness.Alpha, nil
 }
 
 // Threshold 样本通过检测判定数量
@@ -129,5 +129,6 @@ func Threshold(s int) int {
 	a := randomness.Alpha
 	_s := float64(s)
 	r := _s * (1 - a - 3*math.Sqrt((a*(1-a))/_s))
-	return int(r)
+
+	return int(math.Ceil(r))
 }

@@ -39,6 +39,8 @@ func main() {
 
 使用方法见 [测试用例](detect/detect_test.go)
 
+如果您的处理含有多个核心你可以使用Fast系列的API来加速检测，见 [测试用例](detect/detect_fast_test.go)
+
 ## 概述
 
 目前《GM/T 0005-2012 随机性检测规范》已经升级至 《GB/T 32915-2016 信息安全技术 二元序列随机性检测方法》。
