@@ -105,11 +105,12 @@ rddetector -i 待检测数据目录 [-o 生成报告位置]
 
 func main() {
 	flag.Parse()
-	if inputPath == "" {
-		fmt.Fprintf(os.Stderr, "	-i 参数缺失\n\n")
-		flag.Usage()
-		return
-	}
+	inputPath = "C:\\Users\\pc\\Desktop\\rand_data_20191021_OK"
+	//if inputPath == "" {
+	//	fmt.Fprintf(os.Stderr, "	-i 参数缺失\n\n")
+	//	flag.Usage()
+	//	return
+	//}
 	_ = os.MkdirAll(filepath.Dir(reportPath), os.FileMode(0600))
 
 	n := runtime.NumCPU()
@@ -153,10 +154,9 @@ func main() {
 	}
 	// 结果工作器
 	go filepath.Walk(inputPath, func(p string, _ fs.FileInfo, _ error) error {
-		if !strings.HasSuffix(p, ".bin") {
-			return nil
+		if strings.HasSuffix(p, ".bin") || strings.HasSuffix(p, ".dat") {
+			jobs <- p
 		}
-		jobs <- p
 		return nil
 	})
 
@@ -173,10 +173,10 @@ func toBeTestFileNum(p string) int {
 	cnt := 0
 	// 结果工作器
 	filepath.Walk(p, func(p string, _ fs.FileInfo, _ error) error {
-		if !strings.HasSuffix(p, ".bin") {
-			return nil
+		if strings.HasSuffix(p, ".bin") || strings.HasSuffix(p, ".dat") {
+			cnt++
 		}
-		cnt++
+
 		return nil
 	})
 	return cnt
