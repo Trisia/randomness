@@ -26,31 +26,50 @@ func worker(jobs <-chan string, out chan<- *R) {
 		buf, _ := ioutil.ReadFile(filename)
 		bits := randomness.B2bitArr(buf)
 		buf = nil
-		arr := make([]float64, 0, 16)
+		arr := make([]float64, 0, 25)
 
 		p := randomness.MonoBitFrequencyTest(bits)
 		arr = append(arr, p)
 		p = randomness.FrequencyWithinBlockTest(bits)
 		arr = append(arr, p)
-		p = randomness.PokerTest(bits)
+		p = randomness.PokerProto(bits, 4)
 		arr = append(arr, p)
-		p1, p2 := randomness.OverlappingTemplateMatchingTest(bits)
+		p = randomness.PokerProto(bits, 8)
+		arr = append(arr, p)
+
+		p1, p2 := randomness.OverlappingTemplateMatchingProto(bits, 2)
 		arr = append(arr, p1, p2)
+		p1, p2 = randomness.OverlappingTemplateMatchingProto(bits, 5)
+		arr = append(arr, p1, p2)
+
 		p = randomness.RunsTest(bits)
 		arr = append(arr, p)
 		p = randomness.RunsDistributionTest(bits)
 		arr = append(arr, p)
 		p = randomness.LongestRunOfOnesInABlockTest(bits)
 		arr = append(arr, p)
-		p = randomness.BinaryDerivativeTest(bits)
+
+		p = randomness.BinaryDerivativeProto(bits, 3)
 		arr = append(arr, p)
-		p = randomness.AutocorrelationTest(bits)
+		p = randomness.BinaryDerivativeProto(bits, 7)
 		arr = append(arr, p)
+
+		p = randomness.AutocorrelationProto(bits, 1)
+		arr = append(arr, p)
+		p = randomness.AutocorrelationProto(bits, 2)
+		arr = append(arr, p)
+		p = randomness.AutocorrelationProto(bits, 8)
+		arr = append(arr, p)
+		p = randomness.AutocorrelationProto(bits, 16)
+		arr = append(arr, p)
+
 		p = randomness.MatrixRankTest(bits)
 		arr = append(arr, p)
 		p = randomness.CumulativeTest(bits)
 		arr = append(arr, p)
-		p = randomness.ApproximateEntropyTest(bits)
+		p = randomness.ApproximateEntropyProto(bits, 2)
+		arr = append(arr, p)
+		p = randomness.ApproximateEntropyProto(bits, 5)
 		arr = append(arr, p)
 		p = randomness.LinearComplexityTest(bits)
 		arr = append(arr, p)
@@ -105,12 +124,11 @@ rddetector -i 待检测数据目录 [-o 生成报告位置]
 
 func main() {
 	flag.Parse()
-	inputPath = "C:\\Users\\pc\\Desktop\\rand_data_20191021_OK"
-	//if inputPath == "" {
-	//	fmt.Fprintf(os.Stderr, "	-i 参数缺失\n\n")
-	//	flag.Usage()
-	//	return
-	//}
+	if inputPath == "" {
+		fmt.Fprintf(os.Stderr, "	-i 参数缺失\n\n")
+		flag.Usage()
+		return
+	}
 	_ = os.MkdirAll(filepath.Dir(reportPath), os.FileMode(0600))
 
 	n := runtime.NumCPU()
@@ -127,21 +145,28 @@ func main() {
 		"源数据," +
 			"单比特频数检测," +
 			"块内频数检测," +
+			"扑克检测m=4," +
 			"扑克检测m=8," +
+			"重叠子序列检测m=2 P1,重叠子序列检测m=2 P2," +
 			"重叠子序列检测m=5 P1,重叠子序列检测m=5 P2," +
 			"游程总数检测," +
 			"游程分布检测," +
 			"块内最大”1“游程检测," +
+			"二元推导检测k=3," +
 			"二元推导检测k=7," +
+			"自相关检测d=1," +
+			"自相关检测d=2," +
+			"自相关检测d=8," +
 			"自相关检测d=16," +
 			"矩阵秩检测," +
 			"累加和检测," +
+			"近似熵检测m=2," +
 			"近似熵检测m=5," +
 			"线性复杂度检测," +
 			"Maurer通用统计检测," +
 			"离散傅里叶检测\n")
 	var wg sync.WaitGroup
-	var cnt = make([]int32, 16)
+	var cnt = make([]int32, 25)
 	s := toBeTestFileNum(inputPath)
 	fmt.Printf(">> 开始执行随机性检测，待检测样本数 s = %d\n", s)
 	wg.Add(s)
