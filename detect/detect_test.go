@@ -3,6 +3,10 @@ package detect
 import (
 	"crypto/rand"
 	"fmt"
+	"io"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -44,4 +48,34 @@ func TestSingleDetect(t *testing.T) {
 		t.Fatal(err)
 	}
 	fmt.Println("扑克检测 单次检测 10^6 bit:", pass)
+}
+
+func TestPowerOnDetect2(t *testing.T) {
+	var files []io.Reader
+	dirname := "D:\\Project\\cliven\\randomness\\tools\\rdgen\\target\\data"
+	dirs, err := ioutil.ReadDir(dirname)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		for _, file := range files {
+			_ = file.(io.Closer).Close()
+		}
+	}()
+	for _, fi := range dirs {
+		name := filepath.Join(dirname, fi.Name())
+		file, err := os.OpenFile(name, os.O_RDONLY, os.FileMode(666))
+		if err != nil {
+			panic(err)
+		}
+		files = append(files, file)
+	}
+	mReader := io.MultiReader(files...)
+	hit := "通过"
+
+	pass, err := PowerOnDetect(mReader)
+	if err != nil {
+		hit = err.Error()
+	}
+	fmt.Printf("15种算法 上电自检 20组 10^6 bit: %v, hit: %s\n", pass, hit)
 }
