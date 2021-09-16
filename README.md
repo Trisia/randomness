@@ -94,3 +94,9 @@ func main() {
 
 具体方法参照 [《Go语言高级编程》 第2章 CGO编程](https://chai2010.cn/advanced-go-programming-book/)
 
+
+## 工具
+
+- [检测数据生成工具 rdgen](./tools/rdgen/README.md)
+- [随机新检测工具 rddetector](./tools/rddetector/README.md)
+

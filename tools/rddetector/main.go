@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"github.com/Trisia/randomness"
 	"io"
@@ -25,30 +26,50 @@ func worker(jobs <-chan string, out chan<- *R) {
 		buf, _ := ioutil.ReadFile(filename)
 		bits := randomness.B2bitArr(buf)
 		buf = nil
-		arr := make([]float64, 0, 16)
+		arr := make([]float64, 0, 25)
+
 		p := randomness.MonoBitFrequencyTest(bits)
 		arr = append(arr, p)
 		p = randomness.FrequencyWithinBlockTest(bits)
 		arr = append(arr, p)
-		p = randomness.PokerTest(bits)
+		p = randomness.PokerProto(bits, 4)
 		arr = append(arr, p)
-		p1, p2 := randomness.OverlappingTemplateMatchingTest(bits)
+		p = randomness.PokerProto(bits, 8)
+		arr = append(arr, p)
+
+		p1, p2 := randomness.OverlappingTemplateMatchingProto(bits, 2)
 		arr = append(arr, p1, p2)
+		p1, p2 = randomness.OverlappingTemplateMatchingProto(bits, 5)
+		arr = append(arr, p1, p2)
+
 		p = randomness.RunsTest(bits)
 		arr = append(arr, p)
 		p = randomness.RunsDistributionTest(bits)
 		arr = append(arr, p)
 		p = randomness.LongestRunOfOnesInABlockTest(bits)
 		arr = append(arr, p)
-		p = randomness.BinaryDerivativeTest(bits)
+
+		p = randomness.BinaryDerivativeProto(bits, 3)
 		arr = append(arr, p)
-		p = randomness.AutocorrelationTest(bits)
+		p = randomness.BinaryDerivativeProto(bits, 7)
 		arr = append(arr, p)
+
+		p = randomness.AutocorrelationProto(bits, 1)
+		arr = append(arr, p)
+		p = randomness.AutocorrelationProto(bits, 2)
+		arr = append(arr, p)
+		p = randomness.AutocorrelationProto(bits, 8)
+		arr = append(arr, p)
+		p = randomness.AutocorrelationProto(bits, 16)
+		arr = append(arr, p)
+
 		p = randomness.MatrixRankTest(bits)
 		arr = append(arr, p)
 		p = randomness.CumulativeTest(bits)
 		arr = append(arr, p)
-		p = randomness.ApproximateEntropyTest(bits)
+		p = randomness.ApproximateEntropyProto(bits, 2)
+		arr = append(arr, p)
+		p = randomness.ApproximateEntropyProto(bits, 5)
 		arr = append(arr, p)
 		p = randomness.LinearComplexityTest(bits)
 		arr = append(arr, p)
@@ -57,7 +78,7 @@ func worker(jobs <-chan string, out chan<- *R) {
 		p = randomness.DiscreteFourierTransformTest(bits)
 		arr = append(arr, p)
 
-		fmt.Printf(">> 文件 %s 测试结束.\n", filename)
+		fmt.Printf(">> 检测结束 文件 %s\n", filename)
 		go func() {
 			out <- &R{path.Base(filename), arr}
 		}()
@@ -80,35 +101,75 @@ func resultWriter(in <-chan *R, w io.StringWriter, cnt []int32, wg *sync.WaitGro
 
 }
 
+var (
+	inputPath  string // 参数文件输入路径
+	reportPath string // 生成的监测报告位置
+)
+
+func init() {
+	flag.StringVar(&inputPath, "i", "", "待检测随机数文件位置")
+	flag.StringVar(&reportPath, "o", "RandomnessTestReport.csv", "待检测随机数文件位置")
+	flag.Usage = usage
+}
+func usage() {
+	fmt.Fprintf(os.Stderr, `randomness 随机性检测 rddetector 使用说明
+
+rddetector -i 待检测数据目录 [-o 生成报告位置]
+
+	示例: rddetector -i /data/target/ -o RandomnessTestReport.csv
+
+`)
+	flag.PrintDefaults()
+}
+
 func main() {
+	flag.Parse()
+	if inputPath == "" {
+		fmt.Fprintf(os.Stderr, "	-i 参数缺失\n\n")
+		flag.Usage()
+		return
+	}
+	_ = os.MkdirAll(filepath.Dir(reportPath), os.FileMode(0600))
+
 	n := runtime.NumCPU()
 	out := make(chan *R)
 	jobs := make(chan string)
-	const inputPath = "target/data"
 
-	reportLoc, _ := filepath.Abs("target/RandomnessTestReport.csv")
-	w, _ := os.OpenFile(reportLoc, os.O_RDWR|os.O_TRUNC|os.O_CREATE, os.FileMode(0600))
+	w, err := os.OpenFile(reportPath, os.O_RDWR|os.O_TRUNC|os.O_CREATE, os.FileMode(0600))
+	if err != nil {
+		fmt.Fprint(os.Stderr, "无法打开写入文件 "+reportPath)
+		return
+	}
 	defer w.Close()
 	_, _ = w.WriteString(
 		"源数据," +
 			"单比特频数检测," +
 			"块内频数检测," +
+			"扑克检测m=4," +
 			"扑克检测m=8," +
+			"重叠子序列检测m=2 P1,重叠子序列检测m=2 P2," +
 			"重叠子序列检测m=5 P1,重叠子序列检测m=5 P2," +
 			"游程总数检测," +
 			"游程分布检测," +
 			"块内最大”1“游程检测," +
+			"二元推导检测k=3," +
 			"二元推导检测k=7," +
+			"自相关检测d=1," +
+			"自相关检测d=2," +
+			"自相关检测d=8," +
 			"自相关检测d=16," +
 			"矩阵秩检测," +
 			"累加和检测," +
+			"近似熵检测m=2," +
 			"近似熵检测m=5," +
 			"线性复杂度检测," +
 			"Maurer通用统计检测," +
 			"离散傅里叶检测\n")
 	var wg sync.WaitGroup
-	var cnt = make([]int32, 16)
-	wg.Add(toBeTestFileNum(inputPath))
+	var cnt = make([]int32, 25)
+	s := toBeTestFileNum(inputPath)
+	fmt.Printf(">> 开始执行随机性检测，待检测样本数 s = %d\n", s)
+	wg.Add(s)
 
 	// 启动数据写入消费者
 	go resultWriter(out, w, cnt, &wg)
@@ -118,10 +179,9 @@ func main() {
 	}
 	// 结果工作器
 	go filepath.Walk(inputPath, func(p string, _ fs.FileInfo, _ error) error {
-		if !strings.HasSuffix(p, ".bin") {
-			return nil
+		if strings.HasSuffix(p, ".bin") || strings.HasSuffix(p, ".dat") {
+			jobs <- p
 		}
-		jobs <- p
 		return nil
 	})
 
@@ -131,17 +191,17 @@ func main() {
 		_, _ = w.WriteString(fmt.Sprintf(", %d", cnt[i]))
 	}
 	_, _ = w.WriteString("\n")
-	fmt.Println(">> 检测完成 检测报告:", reportLoc)
+	fmt.Println(">> 检测完成 检测报告:", reportPath)
 }
 
 func toBeTestFileNum(p string) int {
 	cnt := 0
 	// 结果工作器
 	filepath.Walk(p, func(p string, _ fs.FileInfo, _ error) error {
-		if !strings.HasSuffix(p, ".bin") {
-			return nil
+		if strings.HasSuffix(p, ".bin") || strings.HasSuffix(p, ".dat") {
+			cnt++
 		}
-		cnt++
+
 		return nil
 	})
 	return cnt

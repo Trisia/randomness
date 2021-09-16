@@ -16,7 +16,7 @@ func FactoryDetect(source io.Reader) (bool, error) {
 	buf := make([]byte, 1000_000/8)
 	counters := make([]int, 15)
 	for i := 0; i < s; i++ {
-		_, err := source.Read(buf)
+		_, err := io.ReadFull(source, buf)
 		if err != nil {
 			return false, err
 		}
@@ -43,7 +43,7 @@ func PowerOnDetect(source io.Reader) (bool, error) {
 	buf := make([]byte, 1000_000/8)
 	counters := make([]int, 15)
 	for i := 0; i < s; i++ {
-		_, err := source.Read(buf)
+		_, err := io.ReadFull(source, buf)
 		if err != nil {
 			return false, err
 		}
@@ -71,7 +71,7 @@ func PeriodDetect(source io.Reader) (bool, error) {
 	buf := make([]byte, 20000/8)
 	counters := make([]int, 12)
 	for i := 0; i < s; i++ {
-		_, err := source.Read(buf)
+		_, err := io.ReadFull(source, buf)
 		if err != nil {
 			return false, err
 		}
@@ -95,7 +95,7 @@ func PeriodDetect(source io.Reader) (bool, error) {
 // numByte: 采集字节数，不能小于16
 func SingleDetect(source io.Reader, numByte int) (bool, error) {
 	data := make([]byte, numByte)
-	_, err := source.Read(data)
+	_, err := io.ReadFull(source, data)
 	if err != nil {
 		return false, err
 	}
