@@ -3,10 +3,6 @@ package detect
 import (
 	"crypto/rand"
 	"fmt"
-	"io"
-	"io/ioutil"
-	"os"
-	"path/filepath"
 	"testing"
 )
 
@@ -49,6 +45,7 @@ func TestSingleDetect(t *testing.T) {
 	}
 	fmt.Println("扑克检测 单次检测 10^6 bit:", pass)
 }
+
 /*
 func TestPowerOnDetect2(t *testing.T) {
 	var files []io.Reader
