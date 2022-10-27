@@ -11,40 +11,49 @@
 package randomness
 
 import (
-	"fmt"
 	"math"
 )
 
 // Cumulative 累加和检测
 func Cumulative(data []byte) *TestResult {
-	p := CumulativeTestBytes(data)
-	return &TestResult{Name: "累加和检测", P: p, Pass: p >= Alpha}
+	p, q := CumulativeTestBytes(data, true)
+	return &TestResult{Name: "累加和检测", P: p, Q: q, Pass: p >= Alpha}
 }
 
 // CumulativeTestBytes 累加和检测
-func CumulativeTestBytes(data []byte) float64 {
-	return CumulativeTest(B2bitArr(data))
+func CumulativeTestBytes(data []byte, forward bool) (float64, float64) {
+	return CumulativeTest(B2bitArr(data), forward)
 }
 
 // CumulativeTest 累加和检测
-func CumulativeTest(bits []bool) float64 {
+func CumulativeTest(bits []bool, forward bool) (float64, float64) {
 	n := len(bits)
 
 	if n == 0 {
-		fmt.Println("CumulativeTest:args wrong")
-		return -1
+		panic("please provide test bits")
 	}
+
 	var S int = 0
 	var Z int = 0
 	var P float64 = 1.0
+
 	for i := 0; i < n; i++ {
-		if bits[i] {
-			S++
+		if forward {
+			if bits[i] {
+				S++
+			} else {
+				S--
+			}
 		} else {
-			S--
+			if bits[n-1-i] {
+				S++
+			} else {
+				S--
+			}
 		}
 		Z = max(Z, abs(S))
 	}
+
 	_n := float64(n)
 	for i := ((-n / Z) + 1) / 4; i <= ((n/Z)-1)/4; i++ {
 		P -= normal_CDF(float64((4*i+1)*Z)/math.Sqrt(_n)) - normal_CDF(float64((4*i-1)*Z)/math.Sqrt(_n))
@@ -52,5 +61,5 @@ func CumulativeTest(bits []bool) float64 {
 	for i := ((-n / Z) - 3) / 4; i <= ((n/Z)-1)/4; i++ {
 		P += normal_CDF(float64((4*i+3)*Z)/math.Sqrt(_n)) - normal_CDF(float64((4*i+1)*Z)/math.Sqrt(_n))
 	}
-	return P
+	return P, P
 }
