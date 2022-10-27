@@ -49,7 +49,7 @@ func TestSingleDetect(t *testing.T) {
 	}
 	fmt.Println("扑克检测 单次检测 10^6 bit:", pass)
 }
-
+/*
 func TestPowerOnDetect2(t *testing.T) {
 	var files []io.Reader
 	dirname := "D:\\Project\\cliven\\randomness\\tools\\rdgen\\target\\data"
@@ -79,3 +79,4 @@ func TestPowerOnDetect2(t *testing.T) {
 	}
 	fmt.Printf("15种算法 上电自检 20组 10^6 bit: %v, hit: %s\n", pass, hit)
 }
+*/
