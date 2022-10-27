@@ -8,7 +8,7 @@ import (
 func TestOverlappingTemplateMatchingTest(t *testing.T) {
 	bits := ReadGroup("data.bin")
 	p1, p2, q1, q2 := OverlappingTemplateMatchingTest(bits)
-	fmt.Printf("n: 1000000, P-value1: %.6f P-value2: %.6f, Q-value1: %.6f Q-value2: %.6f\n", p1, p2, q1, q2)
+	fmt.Printf("n: %v, P-value1: %.6f P-value2: %.6f, Q-value1: %.6f Q-value2: %.6f\n", len(bits), p1, p2, q1, q2)
 }
 
 func TestOverlappingTemplateMatchingTestSample(t *testing.T) {

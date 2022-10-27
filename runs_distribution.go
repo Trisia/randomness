@@ -37,6 +37,7 @@ func RunsDistributionTest(bits []bool) (float64, float64) {
 			break
 		}
 	}
+	k--
 
 	// Step 2
 	e := make([]float64, k)
@@ -88,7 +89,7 @@ func RunsDistributionTest(bits []bool) (float64, float64) {
 	}
 
 	// Step 6
-	P := igamc(float64(k), V/2.0)
+	P := igamc(float64(k-1), V/2.0)
 
 	return P, P
 }

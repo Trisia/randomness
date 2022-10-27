@@ -9,7 +9,7 @@ func TestMonoBitFrequencyTest(t *testing.T) {
 	bits := GroupBit()
 	//bits := ReadGroup("data.bin")
 	p, q := MonoBitFrequencyTest(bits)
-	fmt.Printf("n: 1000000, P-value: %.6f, Q-value: %.6f\n", p, q)
+	fmt.Printf("n: %v, P-value: %.6f, Q-value: %.6f\n", len(bits), p, q)
 }
 
 func TestMonoBitFrequencyTestSample(t *testing.T) {

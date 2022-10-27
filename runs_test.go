@@ -8,7 +8,7 @@ import (
 func TestRunsTest(t *testing.T) {
 	bits := ReadGroup("data.bin")
 	p, q := RunsTest(bits)
-	fmt.Printf("n: 1000000, P-value: %f, Q-value: %f\n", p, q)
+	fmt.Printf("n: %v, P-value: %f, Q-value: %f\n", len(bits), p, q)
 }
 
 func TestRunsTestSample(t *testing.T) {
