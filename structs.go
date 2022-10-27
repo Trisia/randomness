@@ -6,8 +6,10 @@ const Alpha = 0.01
 // TestResult 检测结果
 type TestResult struct {
 	Name string  // 检测名称
-	P    float64 // 检测结果
-	P2   float64 // 检测结果P2
+	P    float64 // 检测结果P_value1
+	Q    float64 // 检测结果Q_value1
+	P2   float64 // 检测结果P_value2
+	Q2   float64 // 检测结果Q_value2
 	Pass bool    // 是否大于等于显著水平
 }
 

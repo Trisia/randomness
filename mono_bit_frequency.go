@@ -11,31 +11,29 @@
 package randomness
 
 import (
-	"fmt"
 	"math"
 )
 
 // MonoBitFrequency 单比特频数检测
 func MonoBitFrequency(data []byte) *TestResult {
-	p := MonoBitFrequencyTestBytes(data)
-	return &TestResult{Name: "单比特频数检测", P: p, Pass: p >= Alpha}
+	p, q := MonoBitFrequencyTestBytes(data)
+	return &TestResult{Name: "单比特频数检测", P: p, Q: q, Pass: p >= Alpha}
 }
 
 // MonoBitFrequencyTestBytes 单比特频数检测
-func MonoBitFrequencyTestBytes(data []byte) float64 {
+func MonoBitFrequencyTestBytes(data []byte) (float64, float64) {
 	return MonoBitFrequencyTest(B2bitArr(data))
 }
 
 // MonoBitFrequencyTest 单比特频数检测
-func MonoBitFrequencyTest(bits []bool) float64 {
+func MonoBitFrequencyTest(bits []bool) (float64, float64) {
 	if len(bits) == 0 {
-		fmt.Println("MonoBitFrequencyTest:arg wrong")
-		return -1
+		panic("please provide test bits")
 	}
 	n := len(bits)
 	S := 0
-	var V float64
-	var P float64
+	var V, P, Q float64
+
 	for _, bit := range bits {
 		if bit {
 			S++
@@ -43,7 +41,8 @@ func MonoBitFrequencyTest(bits []bool) float64 {
 			S--
 		}
 	}
-	V = math.Abs(float64(S)) / math.Sqrt(float64(n))
-	P = math.Erfc(V / math.Sqrt(2))
-	return P
+	V = float64(S) / math.Sqrt(float64(n))
+	P = math.Erfc(math.Abs(V) / math.Sqrt(2))
+	Q = math.Erfc(V/math.Sqrt(2)) / 2
+	return P, Q
 }

@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/Trisia/randomness"
 	"io"
 	"io/fs"
 	"io/ioutil"
@@ -14,6 +13,8 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
+
+	"github.com/Trisia/randomness"
 )
 
 type R struct {
@@ -28,25 +29,25 @@ func worker(jobs <-chan string, out chan<- *R) {
 		buf = nil
 		arr := make([]float64, 0, 25)
 
-		p := randomness.MonoBitFrequencyTest(bits)
+		p, _ := randomness.MonoBitFrequencyTest(bits)
 		arr = append(arr, p)
-		p = randomness.FrequencyWithinBlockTest(bits)
+		p, _ = randomness.FrequencyWithinBlockTest(bits)
 		arr = append(arr, p)
-		p = randomness.PokerProto(bits, 4)
+		p, _ = randomness.PokerProto(bits, 4)
 		arr = append(arr, p)
-		p = randomness.PokerProto(bits, 8)
+		p, _ = randomness.PokerProto(bits, 8)
 		arr = append(arr, p)
 
-		p1, p2 := randomness.OverlappingTemplateMatchingProto(bits, 2)
+		p1, p2, _, _ := randomness.OverlappingTemplateMatchingProto(bits, 2)
 		arr = append(arr, p1, p2)
-		p1, p2 = randomness.OverlappingTemplateMatchingProto(bits, 5)
+		p1, p2, _, _ = randomness.OverlappingTemplateMatchingProto(bits, 5)
 		arr = append(arr, p1, p2)
 
-		p = randomness.RunsTest(bits)
+		p, _ = randomness.RunsTest(bits)
 		arr = append(arr, p)
-		p = randomness.RunsDistributionTest(bits)
+		p, _ = randomness.RunsDistributionTest(bits)
 		arr = append(arr, p)
-		p = randomness.LongestRunOfOnesInABlockTest(bits)
+		p, _ = randomness.LongestRunOfOnesInABlockTest(bits, true)
 		arr = append(arr, p)
 
 		p = randomness.BinaryDerivativeProto(bits, 3)

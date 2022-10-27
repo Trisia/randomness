@@ -109,7 +109,7 @@ func SingleDetect(source io.Reader, numByte int) (bool, error) {
 	} else if n/8 >= 1280 { // n/m >= 5 * 2^m
 		m = 8
 	}
-	p := randomness.PokerTestBytes(data, m)
+	p, _ := randomness.PokerTestBytes(data, m)
 	return p >= randomness.Alpha, nil
 }
 

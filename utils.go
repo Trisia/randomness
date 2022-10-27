@@ -14,6 +14,19 @@ const (
 	MACHEP float64 = 1.11022302462515654042e-16
 )
 
+func subsequencepattern(bits []bool, m int) int {
+	tmp := 0
+	var b bool
+	for j := 0; j < m; j++ {
+		tmp <<= 1
+		b, bits = bits[0], bits[1:]
+		if b {
+			tmp++
+		}
+	}
+	return tmp
+}
+
 func igam(a, x float64) float64 {
 	var ans, ax, c, r float64
 
