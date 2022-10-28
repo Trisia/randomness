@@ -37,7 +37,7 @@ func worker(jobs <-chan string, out chan<- *R) {
 		p, _ = randomness.PokerProto(bits, 8)
 		arr = append(arr, p)
 
-		p1, p2, _, _ := randomness.OverlappingTemplateMatchingProto(bits, 2)
+		p1, p2, _, _ := randomness.OverlappingTemplateMatchingProto(bits, 3)
 		arr = append(arr, p1, p2)
 		p1, p2, _, _ = randomness.OverlappingTemplateMatchingProto(bits, 5)
 		arr = append(arr, p1, p2)
@@ -71,7 +71,9 @@ func worker(jobs <-chan string, out chan<- *R) {
 		arr = append(arr, p)
 		p, _ = randomness.ApproximateEntropyProto(bits, 5)
 		arr = append(arr, p)
-		p, _ = randomness.LinearComplexityTest(bits)
+		p, _ = randomness.LinearComplexityProto(bits, 500)
+		arr = append(arr, p)
+		p, _ = randomness.LinearComplexityProto(bits, 1000)
 		arr = append(arr, p)
 		p, _ = randomness.MaurerUniversalTest(bits)
 		arr = append(arr, p)
@@ -144,26 +146,27 @@ func main() {
 	_, _ = w.WriteString(
 		"源数据," +
 			"单比特频数检测," +
-			"块内频数检测," +
-			"扑克检测m=4," +
-			"扑克检测m=8," +
-			"重叠子序列检测m=2 P1,重叠子序列检测m=2 P2," +
-			"重叠子序列检测m=5 P1,重叠子序列检测m=5 P2," +
+			"块内频数检测 m=10000," +
+			"扑克检测 m=4," +
+			"扑克检测 m=8," +
+			"重叠子序列检测 m=3 P1,重叠子序列检测 m=2 P2," +
+			"重叠子序列检测 m=5 P1,重叠子序列检测 m=5 P2," +
 			"游程总数检测," +
 			"游程分布检测," +
-			"块内最大”1“游程检测," +
-			"二元推导检测k=3," +
-			"二元推导检测k=7," +
-			"自相关检测d=1," +
-			"自相关检测d=2," +
-			"自相关检测d=8," +
-			"自相关检测d=16," +
+			"块内最大游程检测 m=10000," +
+			"二元推导检测 k=3," +
+			"二元推导检测 k=7," +
+			"自相关检测 d=1," +
+			"自相关检测 d=2," +
+			"自相关检测 d=8," +
+			"自相关检测 d=16," +
 			"矩阵秩检测," +
 			"累加和检测," +
-			"近似熵检测m=2," +
-			"近似熵检测m=5," +
-			"线性复杂度检测," +
-			"Maurer通用统计检测," +
+			"近似熵检测 m=2," +
+			"近似熵检测 m=5," +
+			"线性复杂度检测 m=500," +
+			"线性复杂度检测 m=1000," +
+			"Maurer通用统计检测 L=7 Q=1280," +
 			"离散傅里叶检测\n")
 	var wg sync.WaitGroup
 	var cnt = make([]int32, 25)

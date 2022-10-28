@@ -28,8 +28,9 @@ func OverlappingTemplateMatching(data []byte) *TestResult {
 // OverlappingTemplateMatchingTest 重叠子序列检测方法,m=5
 // bits: 检测序列
 // return:
-//      p1: P-value1
-//      p2: P-value2
+//
+//	p1: P-value1
+//	p2: P-value2
 func OverlappingTemplateMatchingTest(bits []bool) (p1 float64, p2 float64, q1 float64, q2 float64) {
 	return OverlappingTemplateMatchingProto(bits, 5)
 }
@@ -38,18 +39,20 @@ func OverlappingTemplateMatchingTest(bits []bool) (p1 float64, p2 float64, q1 fl
 // data: 检测序列
 // m: m长度,m=2,5
 // return:
-//      p1: P-value1
-//      p2: P-value2
+//
+//	p1: P-value1
+//	p2: P-value2
 func OverlappingTemplateMatchingTestBytes(data []byte, m int) (p1 float64, p2 float64, q1 float64, q2 float64) {
 	return OverlappingTemplateMatchingProto(B2bitArr(data), m)
 }
 
 // OverlappingTemplateMatchingProto 重叠子序列检测方法
 // bits: 检测序列
-// m: m长度,m=2,5
+// m: m长度,m=3,5
 // return:
-//      p1: P-value1
-//      p2: P-value2
+//
+//	p1: P-value1
+//	p2: P-value2
 func OverlappingTemplateMatchingProto(bits []bool, m int) (p1 float64, p2 float64, q1 float64, q2 float64) {
 	n := len(bits)
 	if n < 5 {
