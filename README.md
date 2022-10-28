@@ -1,7 +1,6 @@
 # Randomness 二元序列随机性检测方法
 
-[![Documentation](https://godoc.org/github.com/Trisia/randomness?status.svg)](https://pkg.go.dev/github.com/Trisia/randomness)
-![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/Trisia/randomness)
+[![Documentation](https://godoc.org/github.com/Trisia/randomness?status.svg)](https://pkg.go.dev/github.com/Trisia/randomness) ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/Trisia/randomness) ![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/Trisia/randomness)
 
 > - 致谢 [zhebinhu/randomnessTests](https://github.com/zhebinhu/randomnessTests) 项目对基础算法实现。
 > - 致谢 [Sun Yimin](https://github.com/emmansun)  对本项目优化。
