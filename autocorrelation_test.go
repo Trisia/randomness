@@ -5,12 +5,6 @@ import (
 	"testing"
 )
 
-func TestAutocorrelationTest(t *testing.T) {
-	bits := ReadGroup("data.bin")
-	p, q := AutocorrelationTest(bits, 16)
-	fmt.Printf("n: %v, P-value: %f, Q-value: %f\n", len(bits), p, q)
-}
-
 //1100110000010101011011000100110011100000000000100100110101010001
 //0001001111010110100000001101011111001100111001101101100010110010
 func TestAutocorrelationTestSample(t *testing.T) {

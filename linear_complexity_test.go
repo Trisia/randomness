@@ -5,8 +5,11 @@ import (
 	"testing"
 )
 
-func TestLinearComplexityTest(t *testing.T) {
-	bits := ReadGroup("data.bin")
-	p, q := LinearComplexityTest(bits)
+func TestLinearComplexityTestSample(t *testing.T) {
+	bits := ReadGroupInASCIIFormat("data/data.e")
+	p, q := LinearComplexityProto(bits, 1000)
 	fmt.Printf("n: %v, P-value: %f, Q-value: %f\n", len(bits), p, q)
+	if fmt.Sprintf("%.6f", p) != "0.844721" || fmt.Sprintf("%.6f", q) != "0.844721" {
+		t.FailNow()
+	}
 }

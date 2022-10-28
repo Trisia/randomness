@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -24,7 +23,7 @@ type R struct {
 
 func worker(jobs <-chan string, out chan<- *R) {
 	for filename := range jobs {
-		buf, _ := ioutil.ReadFile(filename)
+		buf, _ := os.ReadFile(filename)
 		bits := randomness.B2bitArr(buf)
 		buf = nil
 		arr := make([]float64, 0, 25)
