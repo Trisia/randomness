@@ -3,7 +3,6 @@ package randomness
 import (
 	"bufio"
 	"fmt"
-	"io/ioutil"
 	"math"
 	"math/rand"
 	"os"
@@ -384,7 +383,7 @@ func GroupSecBit() []bool {
 func ReadGroup(filename string) []bool {
 	n := 1000_000
 	bits := make([]bool, 0, n)
-	buf, err := ioutil.ReadFile(filename)
+	buf, err := os.ReadFile(filename)
 	if err != nil {
 		panic(err)
 	}
