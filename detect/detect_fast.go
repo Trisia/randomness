@@ -2,11 +2,12 @@ package detect
 
 import (
 	"fmt"
-	"github.com/Trisia/randomness"
 	"io"
 	"runtime"
 	"sync"
 	"sync/atomic"
+
+	"github.com/Trisia/randomness"
 )
 
 // 工作器
@@ -15,15 +16,16 @@ import (
 // n: 读取字节数
 // round: 检测方式
 // counter: 结果集统计
-func worker(jobs chan bool, source io.Reader, n int, round func([]byte) []*randomness.TestResult, counter []int32, wait *sync.WaitGroup) {
+func worker(jobs chan int, source io.Reader, n int, round func([]byte) []*randomness.TestResult, counter []int32, distributions [][]float64, wait *sync.WaitGroup) {
 	buf := make([]byte, n, n*2)
-	for range jobs {
+	for i := range jobs {
 		_, err := source.Read(buf)
 		if err != nil {
 			continue
 		}
 		resArr := round(buf)
 		for idx, result := range resArr {
+			distributions[idx][i] = result.Q
 			if result.Pass {
 				atomic.AddInt32(&counter[idx], 1)
 			}
@@ -34,11 +36,11 @@ func worker(jobs chan bool, source io.Reader, n int, round func([]byte) []*rando
 
 // 根据处理器情况启动worker
 // return 控制命令管道, 结束型号器
-func bootWorker(source io.Reader, n int, round func([]byte) []*randomness.TestResult, counter []int32) (chan bool, *sync.WaitGroup) {
+func bootWorker(source io.Reader, n int, round func([]byte) []*randomness.TestResult, counter []int32, distributions [][]float64) (chan int, *sync.WaitGroup) {
 	var wait sync.WaitGroup
-	jobs := make(chan bool)
+	jobs := make(chan int)
 	for i := 0; i < runtime.NumCPU(); i++ {
-		go worker(jobs, source, n, round, counter, &wait)
+		go worker(jobs, source, n, round, counter, distributions, &wait)
 	}
 	return jobs, &wait
 }
@@ -50,17 +52,24 @@ func FactoryDetectFast(source io.Reader) (bool, error) {
 	t := Threshold(s)
 	n := 1000_000 / 8
 	counters := make([]int32, 15)
-	jobs, wg := bootWorker(source, n, Round15, counters)
+	distributions := createDistributions(s, 15)
+	jobs, wg := bootWorker(source, n, Round15, counters, distributions)
 	wg.Add(s)
 	defer close(jobs)
 	for i := 0; i < s; i++ {
-		jobs <- true
+		jobs <- i
 	}
 	wg.Wait()
 	fmt.Println(counters)
 	for i, itemCnt := range counters {
 		if int(itemCnt) < t {
 			return false, fmt.Errorf("%s %d/%d", randomness.TestMethodArr[i].Name, itemCnt, s)
+		}
+	}
+	for i := range distributions {
+		Pt := ThresholdQ(distributions[i])
+		if Pt < randomness.AlphaT {
+			return false, fmt.Errorf("%s %f", randomness.TestMethodArr[i].Name, Pt)
 		}
 	}
 	return true, nil
@@ -73,11 +82,12 @@ func PowerOnDetectFast(source io.Reader) (bool, error) {
 	t := Threshold(s)
 	n := 1000_000 / 8
 	counters := make([]int32, 15)
-	jobs, wg := bootWorker(source, n, Round15, counters)
+	distributions := createDistributions(s, 15)
+	jobs, wg := bootWorker(source, n, Round15, counters, distributions)
 	wg.Add(s)
 	defer close(jobs)
 	for i := 0; i < s; i++ {
-		jobs <- true
+		jobs <- i
 	}
 	wg.Wait()
 	fmt.Println(counters)
@@ -85,6 +95,12 @@ func PowerOnDetectFast(source io.Reader) (bool, error) {
 	for i, itemCnt := range counters {
 		if int(itemCnt) < t {
 			return false, fmt.Errorf("%s %d/%d", randomness.TestMethodArr[i].Name, itemCnt, s)
+		}
+	}
+	for i := range distributions {
+		Pt := ThresholdQ(distributions[i])
+		if Pt < randomness.AlphaT {
+			return false, fmt.Errorf("%s %f", randomness.TestMethodArr[i].Name, Pt)
 		}
 	}
 	return true, nil
@@ -98,17 +114,24 @@ func PeriodDetectFast(source io.Reader) (bool, error) {
 	t := Threshold(s)
 	n := 20000 / 8
 	counters := make([]int32, 15)
-	jobs, wg := bootWorker(source, n, Round15, counters)
+	distributions := createDistributions(s, 15)
+	jobs, wg := bootWorker(source, n, Round15, counters, distributions)
 	wg.Add(s)
 	defer close(jobs)
 	for i := 0; i < s; i++ {
-		jobs <- true
+		jobs <- i
 	}
 	wg.Wait()
 	fmt.Println(counters)
 	for i, itemCnt := range counters {
 		if int(itemCnt) < t {
 			return false, fmt.Errorf("%s %d/%d", randomness.TestMethodArr[i].Name, itemCnt, s)
+		}
+	}
+	for i := range distributions {
+		Pt := ThresholdQ(distributions[i])
+		if Pt < randomness.AlphaT {
+			return false, fmt.Errorf("%s %f", randomness.TestMethodArr[i].Name, Pt)
 		}
 	}
 	return true, nil

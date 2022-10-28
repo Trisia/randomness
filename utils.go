@@ -71,6 +71,10 @@ func logGamma(x float64) float64 {
 	return res * float64(sign)
 }
 
+func Igamc(a, x float64) float64 {
+	return igamc(a, x)
+}
+
 func igamc(a, x float64) float64 {
 	var ans, ax, c, yc, r, t, y, z float64
 	var pk, pkm1, pkm2, qk, qkm1, qkm2 float64
@@ -432,7 +436,7 @@ func ReadGroupInASCIIFormat(filename string) []bool {
 	}
 
 	fmt.Printf("BITSREAD = %d 0s = %d 1s = %d\n", bitsRead, num_0s, num_1s)
-	
+
 	if bitsRead != n {
 		panic("not enough bits readed")
 	}

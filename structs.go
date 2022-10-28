@@ -3,6 +3,9 @@ package randomness
 // Alpha 显著性水平α
 const Alpha = 0.01
 
+// AlphaT 分布均匀性的显著性水平
+const AlphaT float64 = 0.0001
+
 // TestResult 检测结果
 type TestResult struct {
 	Name string  // 检测名称

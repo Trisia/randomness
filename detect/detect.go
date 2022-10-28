@@ -3,10 +3,19 @@ package detect
 import (
 	"errors"
 	"fmt"
-	"github.com/Trisia/randomness"
 	"io"
 	"math"
+
+	"github.com/Trisia/randomness"
 )
+
+func createDistributions(s, m int) [][]float64 {
+	res := make([][]float64, m)
+	for i := 0; i < m; i++ {
+		res[i] = make([]float64, s)
+	}
+	return res
+}
 
 // FactoryDetect 出厂检测，15种检测，每组 10^6比特，分50组
 // source: 随机源
@@ -15,6 +24,7 @@ func FactoryDetect(source io.Reader) (bool, error) {
 	t := Threshold(s)
 	buf := make([]byte, 1000_000/8)
 	counters := make([]int, 15)
+	distributions := createDistributions(s, 15)
 	for i := 0; i < s; i++ {
 		_, err := io.ReadFull(source, buf)
 		if err != nil {
@@ -22,6 +32,7 @@ func FactoryDetect(source io.Reader) (bool, error) {
 		}
 		resArr := Round15(buf)
 		for idx, result := range resArr {
+			distributions[idx][i] = result.Q
 			if result.Pass {
 				counters[idx]++
 			}
@@ -30,6 +41,12 @@ func FactoryDetect(source io.Reader) (bool, error) {
 	for i, n := range counters {
 		if n < t {
 			return false, fmt.Errorf("%s %d/%d", randomness.TestMethodArr[i].Name, n, s)
+		}
+	}
+	for i := range distributions {
+		Pt := ThresholdQ(distributions[i])
+		if Pt < randomness.AlphaT {
+			return false, fmt.Errorf("%s %f", randomness.TestMethodArr[i].Name, Pt)
 		}
 	}
 	return true, nil
@@ -42,6 +59,7 @@ func PowerOnDetect(source io.Reader) (bool, error) {
 	t := Threshold(s)
 	buf := make([]byte, 1000_000/8)
 	counters := make([]int, 15)
+	distributions := createDistributions(s, 15)
 	for i := 0; i < s; i++ {
 		_, err := io.ReadFull(source, buf)
 		if err != nil {
@@ -49,6 +67,7 @@ func PowerOnDetect(source io.Reader) (bool, error) {
 		}
 		resArr := Round15(buf)
 		for idx, result := range resArr {
+			distributions[idx][i] = result.Q
 			if result.Pass {
 				counters[idx]++
 			}
@@ -57,6 +76,12 @@ func PowerOnDetect(source io.Reader) (bool, error) {
 	for i, n := range counters {
 		if n < t {
 			return false, fmt.Errorf("%s %d/%d", randomness.TestMethodArr[i].Name, n, s)
+		}
+	}
+	for i := range distributions {
+		Pt := ThresholdQ(distributions[i])
+		if Pt < randomness.AlphaT {
+			return false, fmt.Errorf("%s %f", randomness.TestMethodArr[i].Name, Pt)
 		}
 	}
 	return true, nil
@@ -70,6 +95,7 @@ func PeriodDetect(source io.Reader) (bool, error) {
 	t := Threshold(s)
 	buf := make([]byte, 20000/8)
 	counters := make([]int, 12)
+	distributions := createDistributions(s, 12)
 	for i := 0; i < s; i++ {
 		_, err := io.ReadFull(source, buf)
 		if err != nil {
@@ -85,6 +111,12 @@ func PeriodDetect(source io.Reader) (bool, error) {
 	for i, n := range counters {
 		if n < t {
 			return false, fmt.Errorf("%s %d/%d", randomness.TestMethodArr[i].Name, n, s)
+		}
+	}
+	for i := range distributions {
+		Pt := ThresholdQ(distributions[i])
+		if Pt < randomness.AlphaT {
+			return false, fmt.Errorf("%s %f", randomness.TestMethodArr[i].Name, Pt)
 		}
 	}
 	return true, nil
@@ -122,4 +154,40 @@ func Threshold(s int) int {
 	r := _s * (1 - a - 3*math.Sqrt((a*(1-a))/_s))
 
 	return int(math.Ceil(r))
+}
+
+// ThresholdQ 样本分布均匀性 (k=10)
+//
+func ThresholdQ(qValues []float64) float64 {
+	var dist [10]int
+	for _, q := range qValues {
+		switch {
+		case q < 0.1:
+			dist[0]++
+		case q < 0.2:
+			dist[1]++
+		case q < 0.3:
+			dist[2]++
+		case q < 0.4:
+			dist[3]++
+		case q < 0.5:
+			dist[4]++
+		case q < 0.6:
+			dist[5]++
+		case q < 0.7:
+			dist[6]++
+		case q < 0.8:
+			dist[7]++
+		case q < 0.9:
+			dist[8]++
+		default:
+			dist[9]++
+		}
+	}
+	var V float64 = 0
+	sk := float64(len(qValues)) / 10
+	for i := 0; i < 10; i++ {
+		V += (float64(dist[i]) - sk) * (float64(dist[i]) - sk) / sk
+	}
+	return randomness.Igamc(4.5, V/2)
 }
