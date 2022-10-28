@@ -79,9 +79,9 @@ func worker(jobs <-chan string, out chan<- *R) {
 		arr = append(arr, p)
 
 		fmt.Printf(">> 检测结束 文件 %s\n", filename)
-		go func() {
-			out <- &R{path.Base(filename), arr}
-		}()
+		go func(file string) {
+			out <- &R{path.Base(file), arr}
+		}(filename)
 	}
 }
 
