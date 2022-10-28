@@ -10,34 +10,46 @@
 
 package randomness
 
-import (
-	"fmt"
-)
-
-// FrequencyWithinBlock 块内频数检测, m = 100
+// FrequencyWithinBlock 块内频数检测, m = 10000 for bits = 1000_000
 func FrequencyWithinBlock(data []byte) *TestResult {
-	p := FrequencyWithinBlockTestBytes(data, 100)
-	return &TestResult{Name: "块内频数检测", P: p, Pass: p >= Alpha}
+	p, q := FrequencyWithinBlockTest(B2bitArr(data))
+	return &TestResult{Name: "块内频数检测", P: p, Q: q, Pass: p >= Alpha}
 }
 
-// FrequencyWithinBlockTest 块内频数检测, m = 100
-func FrequencyWithinBlockTest(bits []bool) float64 {
-	return FrequencyWithinBlockProto(bits, 100)
+// FrequencyWithinBlockTest 块内频数检测, m = 10000 for bits = 1000_000
+func FrequencyWithinBlockTest(bits []bool) (float64, float64) {
+	return FrequencyWithinBlockProto(bits, selectM(len(bits)))
 }
 
 // FrequencyWithinBlockTestBytes 块内频数检测
-func FrequencyWithinBlockTestBytes(data []byte, m int) float64 {
+func FrequencyWithinBlockTestBytes(data []byte, m int) (float64, float64) {
 	return FrequencyWithinBlockProto(B2bitArr(data), m)
 }
 
-// FrequencyWithinBlockProto 块内频数检测
-func FrequencyWithinBlockProto(bits []bool, m int) float64 {
-	n := len(bits)
-	if n == 0 {
-		fmt.Println("FrequencyTestWithinABlock:args wrong")
-		return -1
+func selectM(n int) int {
+	var m int
+	switch {
+	case n >= 100000000:
+		m = 1000000
+	case n >= 1000000:
+		m = 10000
+	case n >= 10000:
+		m = 1000
+	case n >= 1000:
+		m = 100
+	default:
+		m = 10
 	}
+	return m
+}
+
+// FrequencyWithinBlockProto 块内频数检测
+func FrequencyWithinBlockProto(bits []bool, m int) (float64, float64) {
+	n := len(bits)
 	N := n / m
+	if N == 0 {
+		panic("please provide test bits")
+	}
 	bits = bits[:N*m]
 
 	var Pi float64 = 0
@@ -58,5 +70,5 @@ func FrequencyWithinBlockProto(bits []bool, m int) float64 {
 	}
 	V *= 4.0 * float64(m)
 	P = igamc(float64(N)/2.0, V/2.0)
-	return P
+	return P, P
 }

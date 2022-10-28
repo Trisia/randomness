@@ -5,8 +5,11 @@ import (
 	"testing"
 )
 
-func TestMatrixRankTest(t *testing.T) {
-	bits := ReadGroup("data.bin")
-	p := MatrixRankTest(bits)
-	fmt.Printf("n: 1000000, P-value: %f\n", p)
+func TestMatrixRankTestSample(t *testing.T) {
+	bits := ReadGroupInASCIIFormat("data/data.e")
+	p, q := MatrixRankTest(bits)
+	fmt.Printf("n: %v, P-value: %f, Q-value: %f\n", len(bits), p, q)
+	if fmt.Sprintf("%.6f", p) != "0.307543" || fmt.Sprintf("%.6f", q) != "0.307543" {
+		t.FailNow()
+	}
 }

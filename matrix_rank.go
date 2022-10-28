@@ -11,23 +11,22 @@
 package randomness
 
 import (
-	"fmt"
 	"math"
 )
 
 // MatrixRank 矩阵秩检测,M=Q=32
 func MatrixRank(data []byte) *TestResult {
-	p := MatrixRankTestBytes(data, 32, 32)
-	return &TestResult{Name: "矩阵秩检测", P: p, Pass: p >= Alpha}
+	p, q := MatrixRankTestBytes(data, 32, 32)
+	return &TestResult{Name: "矩阵秩检测", P: p, Q: q, Pass: p >= Alpha}
 }
 
 // MatrixRankTest 矩阵秩检测,M=Q=32
-func MatrixRankTest(bits []bool) float64 {
+func MatrixRankTest(bits []bool) (float64, float64) {
 	return MatrixRankProto(bits, 32, 32)
 }
 
 // MatrixRankTestBytes 矩阵秩检测
-func MatrixRankTestBytes(data []byte, M, Q int) float64 {
+func MatrixRankTestBytes(data []byte, M, Q int) (float64, float64) {
 	return MatrixRankProto(B2bitArr(data), M, Q)
 }
 
@@ -35,14 +34,13 @@ func MatrixRankTestBytes(data []byte, M, Q int) float64 {
 // bits: 待检测序列
 // M: 矩阵行数
 // Q: 矩阵列隶属
-func MatrixRankProto(bits []bool, M, Q int) float64 {
+func MatrixRankProto(bits []bool, M, Q int) (float64, float64) {
 	n := len(bits)
-	if n == 0 {
-		fmt.Println("BinaryMatrixRankTest:args wrong")
-		return -1
-	}
 
 	N := n / (M * Q)
+	if N == 0 {
+		panic("please provide valid test bits")
+	}
 	//int n_disc = n % (M * Q);
 	var Fm, Fm1, Fr = 0, 0, 0
 	var matrix = make([][]int, 32)
@@ -81,5 +79,5 @@ func MatrixRankProto(bits []bool, M, Q int) float64 {
 
 	P = igamc(1, V/2.0)
 
-	return P
+	return P, P
 }

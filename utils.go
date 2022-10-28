@@ -1,9 +1,13 @@
 package randomness
 
 import (
+	"bufio"
+	"fmt"
 	"io/ioutil"
 	"math"
 	"math/rand"
+	"os"
+	"strings"
 	"time"
 )
 
@@ -13,6 +17,19 @@ const (
 	big    float64 = 4.503599627370496e15
 	MACHEP float64 = 1.11022302462515654042e-16
 )
+
+func subsequencepattern(bits []bool, m int) int {
+	tmp := 0
+	var b bool
+	for j := 0; j < m; j++ {
+		tmp <<= 1
+		b, bits = bits[0], bits[1:]
+		if b {
+			tmp++
+		}
+	}
+	return tmp
+}
 
 func igam(a, x float64) float64 {
 	var ans, ax, c, r float64
@@ -52,6 +69,10 @@ func igam(a, x float64) float64 {
 func logGamma(x float64) float64 {
 	res, sign := math.Lgamma(x)
 	return res * float64(sign)
+}
+
+func Igamc(a, x float64) float64 {
+	return igamc(a, x)
 }
 
 func igamc(a, x float64) float64 {
@@ -369,6 +390,55 @@ func ReadGroup(filename string) []bool {
 	}
 	for _, b := range buf {
 		bits = append(bits, B2bit(b)...)
+	}
+	return bits
+}
+
+// ReadGroupInASCIIFormat
+func ReadGroupInASCIIFormat(filename string) []bool {
+	file, err := os.Open(filename)
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+	n := 1000_000
+	bits := make([]bool, n)
+	var b int
+	var num_0s, num_1s, bitsRead int
+	r := bufio.NewReader(file)
+	for {
+		line, err := r.ReadBytes('\n')
+		if err != nil {
+			break
+		}
+		rr := strings.NewReader(string(line))
+		for {
+			_, err = fmt.Fscanf(rr, "%1d", &b)
+			if err == nil {
+				if b != 0 {
+					bits[bitsRead] = true
+					num_1s++
+				} else {
+					bits[bitsRead] = false
+					num_0s++
+				}
+				bitsRead++
+				if bitsRead == n {
+					break
+				}
+			} else {
+				break
+			}
+		}
+		if bitsRead == n {
+			break
+		}
+	}
+
+	fmt.Printf("BITSREAD = %d 0s = %d 1s = %d\n", bitsRead, num_0s, num_1s)
+
+	if bitsRead != n {
+		panic("not enough bits readed")
 	}
 	return bits
 }

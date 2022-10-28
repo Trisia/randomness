@@ -3,10 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/Trisia/randomness"
 	"io"
 	"io/fs"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -14,6 +12,8 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
+
+	"github.com/Trisia/randomness"
 )
 
 type R struct {
@@ -23,65 +23,65 @@ type R struct {
 
 func worker(jobs <-chan string, out chan<- *R) {
 	for filename := range jobs {
-		buf, _ := ioutil.ReadFile(filename)
+		buf, _ := os.ReadFile(filename)
 		bits := randomness.B2bitArr(buf)
 		buf = nil
 		arr := make([]float64, 0, 25)
 
-		p := randomness.MonoBitFrequencyTest(bits)
+		p, _ := randomness.MonoBitFrequencyTest(bits)
 		arr = append(arr, p)
-		p = randomness.FrequencyWithinBlockTest(bits)
+		p, _ = randomness.FrequencyWithinBlockTest(bits)
 		arr = append(arr, p)
-		p = randomness.PokerProto(bits, 4)
+		p, _ = randomness.PokerProto(bits, 4)
 		arr = append(arr, p)
-		p = randomness.PokerProto(bits, 8)
+		p, _ = randomness.PokerProto(bits, 8)
 		arr = append(arr, p)
 
-		p1, p2 := randomness.OverlappingTemplateMatchingProto(bits, 2)
+		p1, p2, _, _ := randomness.OverlappingTemplateMatchingProto(bits, 2)
 		arr = append(arr, p1, p2)
-		p1, p2 = randomness.OverlappingTemplateMatchingProto(bits, 5)
+		p1, p2, _, _ = randomness.OverlappingTemplateMatchingProto(bits, 5)
 		arr = append(arr, p1, p2)
 
-		p = randomness.RunsTest(bits)
+		p, _ = randomness.RunsTest(bits)
 		arr = append(arr, p)
-		p = randomness.RunsDistributionTest(bits)
+		p, _ = randomness.RunsDistributionTest(bits)
 		arr = append(arr, p)
-		p = randomness.LongestRunOfOnesInABlockTest(bits)
-		arr = append(arr, p)
-
-		p = randomness.BinaryDerivativeProto(bits, 3)
-		arr = append(arr, p)
-		p = randomness.BinaryDerivativeProto(bits, 7)
+		p, _ = randomness.LongestRunOfOnesInABlockTest(bits, true)
 		arr = append(arr, p)
 
-		p = randomness.AutocorrelationProto(bits, 1)
+		p, _ = randomness.BinaryDerivativeProto(bits, 3)
 		arr = append(arr, p)
-		p = randomness.AutocorrelationProto(bits, 2)
-		arr = append(arr, p)
-		p = randomness.AutocorrelationProto(bits, 8)
-		arr = append(arr, p)
-		p = randomness.AutocorrelationProto(bits, 16)
+		p, _ = randomness.BinaryDerivativeProto(bits, 7)
 		arr = append(arr, p)
 
-		p = randomness.MatrixRankTest(bits)
+		p, _ = randomness.AutocorrelationProto(bits, 1)
 		arr = append(arr, p)
-		p = randomness.CumulativeTest(bits)
+		p, _ = randomness.AutocorrelationProto(bits, 2)
 		arr = append(arr, p)
-		p = randomness.ApproximateEntropyProto(bits, 2)
+		p, _ = randomness.AutocorrelationProto(bits, 8)
 		arr = append(arr, p)
-		p = randomness.ApproximateEntropyProto(bits, 5)
+		p, _ = randomness.AutocorrelationProto(bits, 16)
 		arr = append(arr, p)
-		p = randomness.LinearComplexityTest(bits)
+
+		p, _ = randomness.MatrixRankTest(bits)
 		arr = append(arr, p)
-		p = randomness.MaurerUniversalTest(bits)
+		p, _ = randomness.CumulativeTest(bits, true)
 		arr = append(arr, p)
-		p = randomness.DiscreteFourierTransformTest(bits)
+		p, _ = randomness.ApproximateEntropyProto(bits, 2)
+		arr = append(arr, p)
+		p, _ = randomness.ApproximateEntropyProto(bits, 5)
+		arr = append(arr, p)
+		p, _ = randomness.LinearComplexityTest(bits)
+		arr = append(arr, p)
+		p, _ = randomness.MaurerUniversalTest(bits)
+		arr = append(arr, p)
+		p, _ = randomness.DiscreteFourierTransformTest(bits)
 		arr = append(arr, p)
 
 		fmt.Printf(">> 检测结束 文件 %s\n", filename)
-		go func() {
-			out <- &R{path.Base(filename), arr}
-		}()
+		go func(file string) {
+			out <- &R{path.Base(file), arr}
+		}(filename)
 	}
 }
 
