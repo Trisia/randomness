@@ -7,6 +7,9 @@ import (
 )
 
 func TestFactoryDetectFast(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
 	hit := "通过"
 	pass, err := FactoryDetectFast(rand.Reader)
 	if err != nil {
@@ -16,6 +19,9 @@ func TestFactoryDetectFast(t *testing.T) {
 }
 
 func TestPowerOnDetectFast(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
 	hit := "通过"
 	pass, err := PowerOnDetectFast(rand.Reader)
 	if err != nil {
@@ -25,6 +31,9 @@ func TestPowerOnDetectFast(t *testing.T) {
 }
 
 func TestPeriodDetectFast(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
 	hit := "通过"
 	pass, err := PeriodDetectFast(rand.Reader)
 	if err != nil {
