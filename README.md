@@ -2,18 +2,30 @@
 
 [![Documentation](https://godoc.org/github.com/Trisia/randomness?status.svg)](https://pkg.go.dev/github.com/Trisia/randomness) ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/Trisia/randomness) ![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/Trisia/randomness)
 
-> - 致谢 [zhebinhu/randomnessTests](https://github.com/zhebinhu/randomnessTests) 项目对基础算法实现。
-> - 致谢 [Sun Yimin](https://github.com/emmansun)  对本项目优化。
+**在使用randomness前，请务必悉知 [***《randomness 免责声明》***](免责声明.md)！**
+
+> - 致谢 [zhebinhu/randomnessTests](https://github.com/zhebinhu/randomnessTests) 项目。
+> - 致谢 [Sun Yimin](https://github.com/emmansun)  对本项目关键性建设。
 
 ## 快速入门
 
-运行下面命令安装检测工具集合：
+您可以通过下面命令安装`randomness`：
 
 ```bash
 go get -u github.com/Trisia/randomness
 ```
 
+如何检测？
+
 ```go
+package main
+
+import (
+	"crypto/rand"
+	"fmt"
+	"github.com/Trisia/randomness"
+)
+
 func main() {
 	// 产生随机数序列
 	n := 1000_000
@@ -23,12 +35,14 @@ func main() {
 	bits := randomness.B2bitArr(buf)
 
 	// 运行测试组
-	p := randomness.PokerTest(bits)
+	p, _ := randomness.PokerTest(bits)
 	fmt.Printf("扑克检测 n: 1000000, P-value: %f\n", p)
 }
 ```
 
-产品检测方法：
+`randomness`
+实现了 [《GM/T 0025-2014 SSL VPN 网关产品规范》](http://www.gmbz.org.cn/main/viewfile/20180110021527664415.html) 5.4.4.3
+随机数发生器 4个不同应用阶段的随机数检测：
 
 - 出厂检测 [detect.FactoryDetect](detect/detect.go)
 - 上电检测 [detect.PowerOnDetect](detect/detect.go)
@@ -41,15 +55,18 @@ func main() {
 
 ## 概述
 
-发展历程：
+检测规范：
 
 - 《GM/T 0005-2012 随机性检测规范》 *已废止*
 - 《GB/T 32915-2016 信息安全技术 二元序列随机性检测方法》
 - [《GM/T 0005-2021 随机性检测规范》](http://www.gmbz.org.cn/main/viewfile/20220805030323734119.html)
 
+在 GM/T 0005-2021 中在 **样本通过率判定** 的基础上，增加了 **样本均匀性判定** 作为检测通过判定依据，详见 GM/T 0005-2021
+6.3。
+
 目前 **randomness** 已经升级至《GM/T 0005-2021 随机性检测规范》。
 
-该工具库实现了《GM/T 0005-2021 随机性检测规范》中描述的15中随机性检测方法：
+该工具库实现了《GM/T 0005-2021 随机性检测规范》中描述的15种随机性检测方法：
 
 - [ 1] 单比特频数检测      [MonoBitFrequencyTest](./mono_bit_frequency.go)
 - [ 2] 块内频数检测        [FrequencyWithinBlockTest](./frequency_within_block.go)
@@ -71,27 +88,28 @@ func main() {
 
 - 样本长度：`10^6`比特
 - 显著水平：`α = 0.01`
+- 样本均匀性分布检测的显著性水平： `ατ = 0.0001`
+- 子区间数量： `k = 10`
 
 各算法检测参数如下：
 
-序号 | 检测项目 | 参数           |
---- | --- |--------------|
-1 | 单比特频数检测  | -            |
-2 | 块内频数检测   | m = 10000    |
-3 | 扑克检测     | m = 4,8      |
-4 | 重叠子序列检测  | m = 3,5      |
-5 | 游程总数检测   | -            |
-6 | 游程分布检测   | -            |
-7 | 块内最大游程检测 | m = 10000    |
-8 | 二元推导检测   | k = 3,7      |
-9 | 自相关检测    | d = 1,2,8,16 |
-10 |  矩阵秩检测   | -            |
-11 |  累加和检测   | -            |
-12 |  近似熵检测   | m = 2,5      |
-13 |  线型复杂度检测 | m = 500,1000 |
-14 |  Maurer通用统计检测  | L=7,Q=1280   |
-15 |  离散傅里叶检测 | -            |
-
+| 序号  | 检测项目 | 参数           |
+|-----| --- |--------------|
+| 1   | 单比特频数检测  | -            |
+| 2   | 块内频数检测   | m = 10000    |
+| 3   | 扑克检测     | m = 4,8      |
+| 4   | 重叠子序列检测  | m = 3,5      |
+| 5   | 游程总数检测   | -            |
+| 6   | 游程分布检测   | -            |
+| 7   | 块内最大游程检测 | m = 10000    |
+| 8   | 二元推导检测   | k = 3,7      |
+| 9   | 自相关检测    | d = 1,2,8,16 |
+| 10  |  矩阵秩检测   | -            |
+| 11  |  累加和检测   | -            |
+| 12  |  近似熵检测   | m = 2,5      |
+| 13  |  线型复杂度检测 | m = 500,1000 |
+| 14  |  Maurer通用统计检测  | L=7,Q=1280   |
+| 15  |  离散傅里叶检测 | -            |
 
 ## 工具
 
