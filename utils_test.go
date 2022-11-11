@@ -31,6 +31,32 @@ func TestB2bit(t *testing.T) {
 	}
 }
 
+func TestCeilPow2(t *testing.T) {
+	tests := []struct {
+		name string
+		N    int
+		want int
+	}{
+		{"1", 1, 2},
+		{"2", 2, 2},
+		{"3", 3, 4},
+		{"4", 4, 4},
+		{"5", 5, 8},
+		{"6", 6, 8},
+		{"7", 7, 8},
+		{"8", 8, 8},
+		{"9", 9, 16},
+		{"10", 10, 16},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ceilPow2(tt.N); got != tt.want {
+				t.Errorf("ceilPow2() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestB2Byte(t *testing.T) {
 
 	tests := []struct {

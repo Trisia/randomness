@@ -287,6 +287,16 @@ func pow2DoubleArr(data []float64) []float64 {
 	return newData
 }
 
+func ceilPow2(N int) int {
+	i := 2
+	for {
+		if i >= N {
+			return i
+		}
+		i <<= 1
+	}
+}
+
 // B2bit 字节 转换为 bool数组
 func B2bit(b byte) []bool {
 	return []bool{

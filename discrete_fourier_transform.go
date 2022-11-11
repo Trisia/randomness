@@ -35,33 +35,28 @@ func DiscreteFourierTransformTest(bits []bool) (float64, float64) {
 		panic("please provide test bits")
 	}
 
-	// Step 1
-	r := make([]float64, n)
+	// Step 1, 2
+	N := ceilPow2(n)
+	rr := make([]complex128, N)
 	for i := 0; i < n; i++ {
 		if bits[i] {
-			r[i] = 1.0
+			rr[i] = complex(1.0, 0)
 		} else {
-			r[i] = -1.0
+			rr[i] = complex(-1.0, 0)
 		}
 	}
 
-	// Step 2
-	r = pow2DoubleArr(r)
-	rr := make([]complex128, len(r))
-	for i := range r {
-		rr[i] = complex(r[i], 0)
-	}
-
 	// 傅里叶变换
-	f, err := ttf.New(len(r))
+	var result []complex128
+	f, err := ttf.New(N)
 	if err != nil {
 		panic(err)
 	}
-	result := f.Transform(rr)
+	result = f.Transform(rr)
 
 	// Step 4
 	T := math.Sqrt(2.995732274 * float64(n))
-	
+
 	// Step 5
 	N_0 := 0.95 * float64(n) / 2
 
