@@ -14,10 +14,8 @@ func TestDiscreteFourierTransformTestSample(t *testing.T) {
 }
 
 func BenchmarkDiscreteFourierTransformTest(b *testing.B) {
-	bits := getEConstantBits()
+	bits := make([]bool, 100000000)
 	b.ReportAllocs()
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		_, _ = DiscreteFourierTransformTest(bits)
-	}
+	_, _ = DiscreteFourierTransformTest(bits)
 }

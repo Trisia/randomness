@@ -47,12 +47,11 @@ func DiscreteFourierTransformTest(bits []bool) (float64, float64) {
 	}
 
 	// 傅里叶变换
-	var result []complex128
 	f, err := ttf.New(N)
 	if err != nil {
 		panic(err)
 	}
-	result = f.Transform(rr)
+	f.Transform(rr)
 
 	// Step 4
 	T := math.Sqrt(2.995732274 * float64(n))
@@ -63,7 +62,7 @@ func DiscreteFourierTransformTest(bits []bool) (float64, float64) {
 	// Step 6
 	var N_1 int = 0
 	for i := 0; i < n/2-1; i++ {
-		if cmplx.Abs(result[i]) < T {
+		if cmplx.Abs(rr[i]) < T {
 			N_1++
 		}
 	}
