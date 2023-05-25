@@ -11,49 +11,49 @@
 package randomness
 
 import (
-	"fmt"
 	"math"
 )
 
 // BinaryDerivative 二元推导检测， k=7
 func BinaryDerivative(data []byte) *TestResult {
-	p := BinaryDerivativeTestBytes(data, 7)
-	return &TestResult{Name: "二元推导检测", P: p, Pass: p >= Alpha}
+	p, q := BinaryDerivativeTestBytes(data, 7)
+	return &TestResult{Name: "二元推导检测(k=7)", P: p, Q: q, Pass: p >= Alpha}
 }
 
 // BinaryDerivativeTest 二元推导检测， k=7
-func BinaryDerivativeTest(bits []bool) float64 {
-	return BinaryDerivativeProto(bits, 7)
+func BinaryDerivativeTest(bits []bool, k int) (float64, float64) {
+	return BinaryDerivativeProto(bits, k)
 }
 
 // BinaryDerivativeTestBytes 二元推导检测
 // bits: 待检测序列
 // k: 重复次数，k=3,7
-func BinaryDerivativeTestBytes(data []byte, k int) float64 {
+func BinaryDerivativeTestBytes(data []byte, k int) (float64, float64) {
 	return BinaryDerivativeProto(B2bitArr(data), k)
 }
 
 // BinaryDerivativeProto 二元推导检测
 // bits: 待检测序列
 // k: 重复次数，k=3,7
-func BinaryDerivativeProto(bits []bool, k int) float64 {
+func BinaryDerivativeProto(bits []bool, k int) (float64, float64) {
 	n := len(bits)
 	if n < 7 {
-		fmt.Println("BinaryDerivativeTest:args wrong")
-		return -1
+		panic("please provide valid test bits")
 	}
 
 	S := 0
 	var V float64 = 0
-	var P float64 = 0
 	_bits := make([]bool, len(bits))
 	copy(_bits, bits)
+
+	// Step 1, 2
 	for i := 0; i < k; i++ {
 		for j := 0; j < n-i-1; j++ {
 			_bits[j] = xor(_bits[j], _bits[j+1])
 		}
 	}
 
+	// Step 3
 	for i := 0; i < n-k; i++ {
 		if _bits[i] {
 			S++
@@ -61,7 +61,13 @@ func BinaryDerivativeProto(bits []bool, k int) float64 {
 			S--
 		}
 	}
-	V = math.Abs(float64(S)) / math.Sqrt(float64(n-k))
-	P = math.Erfc(V / math.Sqrt(2))
-	return P
+	// Step 4
+	V = float64(S) / math.Sqrt(float64(n-k))
+
+	// Step 5
+	P := math.Erfc(math.Abs(V) / math.Sqrt(2))
+
+	// Step 6
+	Q := math.Erfc(V/math.Sqrt(2)) / 2
+	return P, Q
 }

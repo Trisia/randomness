@@ -11,16 +11,16 @@
 package randomness
 
 import (
-	"fmt"
 	"math"
 )
 
 // OverlappingTemplateMatching 重叠子序列检测方法,m=5
 func OverlappingTemplateMatching(data []byte) *TestResult {
-	p1, p2 := OverlappingTemplateMatchingTestBytes(data, 5)
+	p1, p2, q1, q2 := OverlappingTemplateMatchingTestBytes(data, 5)
 	return &TestResult{
 		Name: "重叠子序列检测方法",
 		P:    p1, P2: p2,
+		Q: q1, Q2: q2,
 		Pass: math.Min(p1, p2) >= Alpha,
 	}
 }
@@ -28,9 +28,10 @@ func OverlappingTemplateMatching(data []byte) *TestResult {
 // OverlappingTemplateMatchingTest 重叠子序列检测方法,m=5
 // bits: 检测序列
 // return:
-//      p1: P-value1
-//      p2: P-value2
-func OverlappingTemplateMatchingTest(bits []bool) (p1 float64, p2 float64) {
+//
+//	p1: P-value1
+//	p2: P-value2
+func OverlappingTemplateMatchingTest(bits []bool) (p1 float64, p2 float64, q1 float64, q2 float64) {
 	return OverlappingTemplateMatchingProto(bits, 5)
 }
 
@@ -38,23 +39,24 @@ func OverlappingTemplateMatchingTest(bits []bool) (p1 float64, p2 float64) {
 // data: 检测序列
 // m: m长度,m=2,5
 // return:
-//      p1: P-value1
-//      p2: P-value2
-func OverlappingTemplateMatchingTestBytes(data []byte, m int) (p1 float64, p2 float64) {
+//
+//	p1: P-value1
+//	p2: P-value2
+func OverlappingTemplateMatchingTestBytes(data []byte, m int) (p1 float64, p2 float64, q1 float64, q2 float64) {
 	return OverlappingTemplateMatchingProto(B2bitArr(data), m)
 }
 
 // OverlappingTemplateMatchingProto 重叠子序列检测方法
 // bits: 检测序列
-// m: m长度,m=2,5
+// m: m长度,m=3,5
 // return:
-//      p1: P-value1
-//      p2: P-value2
-func OverlappingTemplateMatchingProto(bits []bool, m int) (p1 float64, p2 float64) {
+//
+//	p1: P-value1
+//	p2: P-value2
+func OverlappingTemplateMatchingProto(bits []bool, m int) (p1 float64, p2 float64, q1 float64, q2 float64) {
 	n := len(bits)
 	if n < 5 {
-		fmt.Println("SerialTest:args wrong")
-		return -1, -1
+		panic("please provide valid test bits")
 	}
 	patterns1 := make([]int, 1<<m)
 	patterns2 := make([]int, 1<<(m-1))
@@ -65,20 +67,14 @@ func OverlappingTemplateMatchingProto(bits []bool, m int) (p1 float64, p2 float6
 	var mask1 int = (1 << m) - 1
 	var mask2 int = (1 << (m - 1)) - 1
 	var mask3 int = (1 << (m - 2)) - 1
-	var tmp int = 0
 
-	for i := 0; i < m-1; i++ {
-		bits = append(bits, bits[i])
-	}
+	// Step 1, construct new bits
+	bits = append(bits, bits[:m-1]...)
 
+	// Step 2
 	var b bool
-	for i := 0; i < m-1; i++ {
-		tmp <<= 1
-		b, bits = bits[0], bits[1:]
-		if b {
-			tmp++
-		}
-	}
+	tmp := subsequencepattern(bits, m-1)
+	bits = bits[m-1:]
 
 	for i := 0; i < n; i++ {
 		tmp <<= 1
@@ -91,34 +87,37 @@ func OverlappingTemplateMatchingProto(bits []bool, m int) (p1 float64, p2 float6
 		patterns3[tmp&mask3]++
 	}
 
+	// Step 3
 	for i := 0; i <= mask1; i++ {
-		Phi1 += math.Pow(float64(patterns1[i]), 2.0)
+		Phi1 += float64(patterns1[i]) * float64(patterns1[i])
 	}
 	Phi1 *= float64(mask1 + 1)
 	Phi1 /= float64(n)
 	Phi1 -= float64(n)
 	for i := 0; i <= mask2; i++ {
-		Phi2 += math.Pow(float64(patterns2[i]), 2.0)
+		Phi2 += float64(patterns2[i]) * float64(patterns2[i])
 	}
 	Phi2 *= float64(mask2 + 1)
 	Phi2 /= float64(n)
 	Phi2 -= float64(n)
 	for i := 0; i <= mask3; i++ {
-		Phi3 += math.Pow(float64(patterns3[i]), 2.0)
+		Phi3 += float64(patterns3[i]) * float64(patterns3[i])
 	}
 	Phi3 *= float64(mask3 + 1)
 	Phi3 /= float64(n)
 	Phi3 -= float64(n)
 
+	// Step 4
 	DPhi2 = Phi1 - Phi2
 	D2Phi2 = Phi1 - 2*Phi2 + Phi3
 
-	_2m := 1 << m
-	p1 = igamc(float64(_2m)/4.0, DPhi2/2.0)
-	p2 = igamc(float64(_2m)/8.0, D2Phi2/2.0)
+	// Step 5
+	p1 = igamc(float64(len(patterns3)), DPhi2/2.0)
+	p2 = igamc(float64(len(patterns3))/2.0, D2Phi2/2.0)
 
-	//for i := 0; i < m-1; i++ {
-	//	bits = bits[:len(bits)-1]
-	//}
+	// Step 6
+	q1 = p1
+	q2 = p2
+
 	return
 }

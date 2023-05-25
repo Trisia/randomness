@@ -11,7 +11,6 @@
 package randomness
 
 import (
-	"fmt"
 	"math"
 )
 
@@ -25,21 +24,20 @@ func mutFactorC(L, K int) float64 {
 
 // MaurerUniversal Maurer通用统计检测方法
 func MaurerUniversal(data []byte) *TestResult {
-	p := MaurerUniversalTestBytes(data)
-	return &TestResult{Name: "Maurer通用统计检测方法", P: p, Pass: p >= Alpha}
+	p, q := MaurerUniversalTestBytes(data)
+	return &TestResult{Name: "Maurer通用统计检测方法", P: p, Q: q, Pass: p >= Alpha}
 }
 
 // MaurerUniversalTestBytes Maurer通用统计检测方法
-func MaurerUniversalTestBytes(data []byte) float64 {
+func MaurerUniversalTestBytes(data []byte) (float64, float64) {
 	return MaurerUniversalTest(B2bitArr(data))
 }
 
 // MaurerUniversalTest Maurer通用统计检测方法
-func MaurerUniversalTest(bits []bool) float64 {
+func MaurerUniversalTest(bits []bool) (float64, float64) {
 	n := len(bits)
 	if n == 0 {
-		fmt.Println("MaurersUniversalTest:args wrong")
-		return -1
+		panic("please provide test bits")
 	}
 	L := 7
 	Q := 1280
@@ -86,6 +84,7 @@ func MaurerUniversalTest(bits []bool) float64 {
 	sigma = math.Sqrt(variance[L]/float64(K)) * mutFactorC(L, K)
 	V = (sum/float64(K) - expected_value[L]) / sigma
 	P = math.Erfc(math.Abs(V) / math.Sqrt(2.0))
+	q := math.Erfc(V/math.Sqrt(2.0)) / 2
 
-	return P
+	return P, q
 }

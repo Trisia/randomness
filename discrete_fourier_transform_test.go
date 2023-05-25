@@ -5,8 +5,17 @@ import (
 	"testing"
 )
 
-func TestDiscreteFourierTransformTest(t *testing.T) {
-	bits := ReadGroup("data.bin")
-	p := DiscreteFourierTransformTest(bits)
-	fmt.Printf("n: 1000000, P-value: %f\n", p)
+func TestDiscreteFourierTransformTestSample(t *testing.T) {
+	p, q := DiscreteFourierTransformTest(sampleTestBits100)
+	fmt.Printf("n: %v, P-value: %f, Q-value: %f\n", len(sampleTestBits100), p, q)
+	if fmt.Sprintf("%.6f", p) != "0.654721" || fmt.Sprintf("%.6f", q) != "0.327360" {
+		t.FailNow()
+	}
+}
+
+func BenchmarkDiscreteFourierTransformTest(b *testing.B) {
+	bits := make([]bool, 100000000)
+	b.ReportAllocs()
+	b.ResetTimer()
+	_, _ = DiscreteFourierTransformTest(bits)
 }

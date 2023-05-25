@@ -199,7 +199,7 @@ func roots(N int) []complex128 {
 // lastPow2 return the last power of 2 smaller or equal
 // to the given N, and it's base-2 logarithm.
 func lastPow2(N int) (n, p int, err error) {
-	maxdim := 1 << 20
+	maxdim := 1 << 27
 	if N < 2 {
 		return n, p, fmt.Errorf("fft input length must be >= 2")
 	} else if N > maxdim {

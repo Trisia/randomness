@@ -11,69 +11,66 @@
 package randomness
 
 import (
-	"fmt"
-	"github.com/Trisia/randomness/ttf"
 	"math"
 	"math/cmplx"
+
+	"github.com/Trisia/randomness/ttf"
 )
 
 // DiscreteFourierTransform 离散傅里叶检测
 func DiscreteFourierTransform(data []byte) *TestResult {
-	p := DiscreteFourierTransformTestBytes(data)
-	return &TestResult{Name: "离散傅里叶检测", P: p, Pass: p >= Alpha}
+	p, q := DiscreteFourierTransformTestBytes(data)
+	return &TestResult{Name: "离散傅里叶检测", P: p, Q: q, Pass: p >= Alpha}
 }
 
 // DiscreteFourierTransformTestBytes 离散傅里叶检测
-func DiscreteFourierTransformTestBytes(data []byte) float64 {
+func DiscreteFourierTransformTestBytes(data []byte) (float64, float64) {
 	return DiscreteFourierTransformTest(B2bitArr(data))
 }
 
 // DiscreteFourierTransformTest 离散傅里叶检测
-func DiscreteFourierTransformTest(bits []bool) float64 {
+func DiscreteFourierTransformTest(bits []bool) (float64, float64) {
 	n := len(bits)
 	if n == 0 {
-		fmt.Println("DiscreteFourierTransformTest:args wrong")
-		return -1
+		panic("please provide test bits")
 	}
 
-	r := make([]float64, n)
-	T := math.Sqrt(2.995732274 * float64(n))
-	N_0 := 0.95 * float64(n) / 2
-	var N_1 int = 0
-
+	// Step 1, 2
+	N := ceilPow2(n)
+	rr := make([]complex128, N)
 	for i := 0; i < n; i++ {
 		if bits[i] {
-			r[i] = 1.0
+			rr[i] = complex(1.0, 0)
 		} else {
-			r[i] = -1.0
+			rr[i] = complex(-1.0, 0)
 		}
-	}
-	r = pow2DoubleArr(r)
-	rr := make([]complex128, len(r))
-	for i := range r {
-		rr[i] = complex(r[i], 0)
 	}
 
 	// 傅里叶变换
-	f, err := ttf.New(len(r))
+	f, err := ttf.New(N)
 	if err != nil {
 		panic(err)
 	}
-	result := f.Transform(rr)
-	//FastFourierTransformer fft = new FastFourierTransformer(DftNormalization.STANDARD);
-	//Complex[] result = fft.transform(r, TransformType.FORWARD);
+	f.Transform(rr)
+
+	// Step 4
+	T := math.Sqrt(2.995732274 * float64(n))
+
+	// Step 5
+	N_0 := 0.95 * float64(n) / 2
+
+	// Step 6
+	var N_1 int = 0
 	for i := 0; i < n/2-1; i++ {
-		if cmplx.Abs(result[i]) < T {
+		if cmplx.Abs(rr[i]) < T {
 			N_1++
 		}
 	}
 
-	if math.Abs(r[0]) < T {
-		N_1++
-	}
-
-	V := (float64(N_1) - N_0) / math.Sqrt(0.95*0.05*float64(n)/2.0)
+	// Step 7
+	V := (float64(N_1) - N_0) / math.Sqrt(0.95*0.05*float64(n)/3.8)
 	P := math.Erfc(math.Abs(V) / math.Sqrt(2.0))
+	Q := math.Erfc(V/math.Sqrt(2.0)) / 2
 
-	return P
+	return P, Q
 }

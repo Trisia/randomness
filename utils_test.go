@@ -2,7 +2,6 @@ package randomness
 
 import (
 	"crypto/rand"
-	"io/ioutil"
 	"os"
 	"reflect"
 	"testing"
@@ -27,6 +26,32 @@ func TestB2bit(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := B2bit(tt.arg); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("B2bit() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestCeilPow2(t *testing.T) {
+	tests := []struct {
+		name string
+		N    int
+		want int
+	}{
+		{"1", 1, 2},
+		{"2", 2, 2},
+		{"3", 3, 4},
+		{"4", 4, 4},
+		{"5", 5, 8},
+		{"6", 6, 8},
+		{"7", 7, 8},
+		{"8", 8, 8},
+		{"9", 9, 16},
+		{"10", 10, 16},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ceilPow2(tt.N); got != tt.want {
+				t.Errorf("ceilPow2() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -68,7 +93,7 @@ func TestGroupBit(t *testing.T) {
 		buf = append(buf, B2Byte(tmp))
 	}
 	_, _ = rand.Read(buf)
-	err := ioutil.WriteFile("data.bin", buf, os.ModePerm)
+	err := os.WriteFile("data/data.bin", buf, os.ModePerm)
 	if err != nil {
 		t.Fatal(err)
 	}

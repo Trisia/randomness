@@ -5,8 +5,15 @@ import (
 	"testing"
 )
 
-func TestCumulativeTest(t *testing.T) {
-	bits := ReadGroup("data.bin")
-	p := CumulativeTest(bits)
-	fmt.Printf("n: 1000000, P-value: %f\n", p)
+func TestCumulativeTestSample(t *testing.T) {
+	p, q := CumulativeTest(sampleTestBits100, true)
+	fmt.Printf("Foward, n: %v, P-value: %f, Q-value: %f\n", len(sampleTestBits100), p, q)
+	if fmt.Sprintf("%.6f", p) != "0.219194" || fmt.Sprintf("%.6f", q) != "0.219194" {
+		t.FailNow()
+	}
+	p, q = CumulativeTest(sampleTestBits100, false)
+	fmt.Printf("Backward, n: %v, P-value: %f, Q-value: %f\n", len(sampleTestBits100), p, q)
+	if fmt.Sprintf("%.6f", p) != "0.114866" || fmt.Sprintf("%.6f", q) != "0.114866" {
+		t.FailNow()
+	}
 }

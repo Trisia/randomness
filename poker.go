@@ -10,35 +10,32 @@
 
 package randomness
 
-import "fmt"
-
 // Poker 扑克检测，m=8
 func Poker(data []byte) *TestResult {
-	p := PokerTestBytes(data, 8)
-	return &TestResult{Name: "扑克检测", P: p, Pass: p >= Alpha}
+	p, q := PokerTestBytes(data, 8)
+	return &TestResult{Name: "扑克检测", P: p, Q: q, Pass: p >= Alpha}
 }
 
 // PokerTest 扑克检测，m=8
-func PokerTest(bits []bool) float64 {
+func PokerTest(bits []bool) (float64, float64) {
 	return PokerProto(bits, 8)
 }
 
 // PokerTestBytes 扑克检测
 // data: 检测序列
 // m: m长度，m=4,8
-func PokerTestBytes(data []byte, m int) float64 {
+func PokerTestBytes(data []byte, m int) (float64, float64) {
 	return PokerProto(B2bitArr(data), m)
 }
 
 // PokerProto 扑克检测
 // bits: 检测序列
 // m: m长度，m=4,8
-func PokerProto(bits []bool, m int) float64 {
+func PokerProto(bits []bool, m int) (float64, float64) {
 	n := len(bits)
 
 	if n < 8 {
-		fmt.Println("PokerTest:args wrong")
-		return -1
+		panic("please provide valid test bits")
 	}
 	// 2^m
 	_2m := 1 << m
@@ -47,19 +44,9 @@ func PokerProto(bits []bool, m int) float64 {
 	N := n / m
 	var V float64 = 0
 	var P float64 = 0
-	tmp := 0
 
-	var b bool
 	for i := 0; i < N; i++ {
-		tmp = 0
-		for j := 0; j < m; j++ {
-			tmp <<= 1
-			b, bits = bits[0], bits[1:]
-			if b {
-				tmp++
-			}
-		}
-		patterns[tmp]++
+		patterns[subsequencepattern(bits[i*m:], m)]++
 	}
 
 	for i := 0; i < _2m; i++ {
@@ -69,6 +56,7 @@ func PokerProto(bits []bool, m int) float64 {
 	V *= float64(_2m)
 	V /= float64(N)
 	V -= float64(N)
-	P = igamc(float64((_2m-1)>>1), V/2)
-	return P
+
+	P = igamc(float64(_2m-1)/2, V/2)
+	return P, P
 }

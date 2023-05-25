@@ -5,8 +5,10 @@ import (
 	"testing"
 )
 
-func TestBinaryDerivativeTest(t *testing.T) {
-	bits := ReadGroup("data.bin")
-	p := BinaryDerivativeTest(bits)
-	fmt.Printf("n: 1000000, P-value: %f\n", p)
+func TestBinaryDerivativeTestSample(t *testing.T) {
+	p, q := BinaryDerivativeTest(sampleTestBits128, 3)
+	fmt.Printf("n: %v, P-value: %.6f, Q-value: %.6f\n", len(sampleTestBits128), p, q)
+	if fmt.Sprintf("%.6f", p) != "0.039669" || fmt.Sprintf("%.6f", q) != "0.980166" {
+		t.FailNow()
+	}
 }

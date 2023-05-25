@@ -11,34 +11,32 @@
 package randomness
 
 import (
-	"fmt"
 	"math"
 )
 
 // ApproximateEntropy 近似熵检测,m=5
 func ApproximateEntropy(data []byte) *TestResult {
-	p := ApproximateEntropyTestBytes(data, 5)
-	return &TestResult{Name: "近似熵检测", P: p, Pass: p >= Alpha}
+	p, q := ApproximateEntropyTestBytes(data, 5)
+	return &TestResult{Name: "近似熵检测(m=5)", P: p, Q: q, Pass: p >= Alpha}
 }
 
 // ApproximateEntropyTest 近似熵检测,m=5
-func ApproximateEntropyTest(bits []bool) float64 {
+func ApproximateEntropyTest(bits []bool) (float64, float64) {
 	return ApproximateEntropyProto(bits, 5)
 }
 
 // ApproximateEntropyTestBytes 近似熵检测
-func ApproximateEntropyTestBytes(data []byte, m int) float64 {
+func ApproximateEntropyTestBytes(data []byte, m int) (float64, float64) {
 	return ApproximateEntropyProto(B2bitArr(data), m)
 }
 
 // ApproximateEntropyProto 近似熵检测
 // bits: 待检测序列
 // m: m长度
-func ApproximateEntropyProto(bits []bool, m int) float64 {
+func ApproximateEntropyProto(bits []bool, m int) (float64, float64) {
 	n := len(bits)
 	if n == 0 {
-		fmt.Println("ApproximateEntropyTest:error")
-		return -1
+		panic("please provide test bits")
 	}
 	bits2 := bits
 	var pattern []int
@@ -115,5 +113,5 @@ func ApproximateEntropyProto(bits []bool, m int) float64 {
 	V = 2.0 * float64(n) * (math.Log(2) - ApEn)
 	_2m := 1 << m
 	P = igamc(float64(_2m)/2.0, V/2.0)
-	return P
+	return P, P
 }

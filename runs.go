@@ -11,33 +11,32 @@
 package randomness
 
 import (
-	"fmt"
 	"math"
 )
 
 // Runs 游程总数检测
 func Runs(data []byte) *TestResult {
-	p := RunsTestBytes(data)
-	return &TestResult{Name: "游程总数检测", P: p, Pass: p >= Alpha}
+	p, q := RunsTestBytes(data)
+	return &TestResult{Name: "游程总数检测", P: p, Q: q, Pass: p >= Alpha}
 }
 
 // RunsTestBytes 游程总数检测
-func RunsTestBytes(data []byte) float64 {
+func RunsTestBytes(data []byte) (float64, float64) {
 	return RunsTest(B2bitArr(data))
 }
 
 // RunsTest 游程总数检测
-func RunsTest(bits []bool) float64 {
+func RunsTest(bits []bool) (float64, float64) {
 	n := len(bits)
 	if n == 0 {
-		fmt.Println("RunsTest:args wrong")
-		return -1
+		panic("please provide test bits")
 	}
 
 	var Pi float64 = 0
 	var V_obs int = 1
-	var P float64 = 0
+	var P, Q float64 = 0, 0
 
+	// Step 1, 2
 	for i := 0; i < n-1; i++ {
 		if bits[i] != bits[i+1] {
 			V_obs++
@@ -50,6 +49,14 @@ func RunsTest(bits []bool) float64 {
 		Pi++
 	}
 	Pi /= float64(n)
-	P = math.Erfc(math.Abs(float64(V_obs)-2.0*float64(n)*Pi*(1.0-Pi)) / (2.0 * math.Sqrt(2.0*float64(n)) * Pi * (1.0 - Pi)))
-	return P
+
+	// Step 3
+	V := (float64(V_obs) - 2.0*float64(n)*Pi*(1.0-Pi)) / (2.0 * math.Sqrt(float64(n)) * Pi * (1.0 - Pi))
+
+	// Step 4
+	P = math.Erfc(math.Abs(V) / math.Sqrt(2))
+
+	// Step 5
+	Q = math.Erfc(V / math.Sqrt(2)) / 2.0
+	return P, Q
 }
