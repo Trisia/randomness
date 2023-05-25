@@ -7,15 +7,48 @@
 > - 致谢 [zhebinhu/randomnessTests](https://github.com/zhebinhu/randomnessTests) 项目。
 > - 致谢 [Sun Yimin](https://github.com/emmansun)  对本项目关键性建设。
 
-## 快速入门
+## 项目概述
 
-您可以通过下面命令安装`randomness`：
+该工具库实现了《GM/T 0005-2021 随机性检测规范》中描述的15种随机性检测方法。
+
+![rundesp.png](tools/rddetector/rundesp.png)
+
+- [ 1] 单比特频数检测      [MonoBitFrequencyTest](./mono_bit_frequency.go)
+- [ 2] 块内频数检测        [FrequencyWithinBlockTest](./frequency_within_block.go)
+- [ 3] 扑克检测           [PokerTest](./poker.go)
+- [ 4] 重叠子序列检测      [OverlappingTemplateMatchingTest](./overlapping.go)
+- [ 5] 游程总数检测        [RunsTest](./runs.go)
+- [ 6] 游程分布检测        [RunsDistributionTest](./runs_distribution.go)
+- [ 7] 块内最大游程检测     [LongestRunOfOnesInABlockTest](./longest_run_of_ones_In_block.go)
+- [ 8] 二元推导检测       [BinaryDerivativeTest](./binary_derivative.go)
+- [ 9] 自相关检测         [AutocorrelationTest](./autocorrelation.go)
+- [10] 矩阵秩检测        [MatrixRankTest](./matrix_rank.go)
+- [11] 累加和检测        [CumulativeTest](./cumulative.go)
+- [12] 近似熵检测        [ApproximateEntropyTest](./approximate_entropy.go)
+- [13] 线型复杂度检测     [LinearComplexityTest](./linear_complexity.go)
+- [14] Maurer通用统计检测       [MaurerUniversalTest](./maurers_universal.go)
+- [15] 离散傅里叶检测     [DiscreteFourierTransformTest](./discrete_fourier_transform.go)
+
+
+### 检测工具
+
+若您需要使用相关测试工具需要可以 **[从Release中下载编译版本](https://github.com/Trisia/randomness/releases)** 或 **手动编译程序**，详见文档：
+
+- [随机性检测工具 使用说明 rddetector](./tools/rddetector/README.md)
+- [数据生成工具 使用说明 rdgen](./tools/rdgen/README.md)
+
+
+## 快速入门 
+
+`rddetector`检测工具只是`randomness`的一种应用方式，`randomness`提供丰富的API接口，您可以在根据需要定制化的使用。
+
+安装`randomness`：
 
 ```bash
 go get -u github.com/Trisia/randomness
 ```
 
-如何检测？
+下面是10^6比特数据规模的扑克检测的例子：
 
 ```go
 package main
@@ -40,6 +73,10 @@ func main() {
 }
 ```
 
+更多API使用方法见：[randomness API 文档](https://pkg.go.dev/github.com/Trisia/randomness)
+
+## 随机数发生器检测
+
 `randomness`
 实现了 [《GM/T 0025-2014 SSL VPN 网关产品规范》](http://www.gmbz.org.cn/main/viewfile/20180110021527664415.html) 5.4.4.3
 随机数发生器 4个不同应用阶段的随机数检测：
@@ -49,11 +86,14 @@ func main() {
 - 周期检测 [detect.PeriodDetect](detect/detect.go)
 - 单次检测 [detect.SingleDetect](detect/detect.go)
 
-使用方法见 [测试用例](detect/detect_test.go)
+使用方法见 [测试用例 detect_test.go](detect/detect_test.go)
 
-如果您的处理含有多个核心你可以使用Fast系列的API来加速检测，见 [测试用例](detect/detect_fast_test.go)
+如果您的主机处理器含有多个核心，那么可以使用Fast系列的API来加速检测，见 [测试用例 detect_fast_test.go](detect/detect_fast_test.go)
 
-## 概述
+> 注意：离散傅里叶检测 10^8 bit 规模数据检测为了加速计算单次检测需要消耗1024MB以上内存，请注意主机并发数量防止发生内存溢出（OOM）。
+
+
+## 发展
 
 检测规范：
 
@@ -65,56 +105,4 @@ func main() {
 6.3。
 
 目前 **randomness** 已经升级至《GM/T 0005-2021 随机性检测规范》。
-
-该工具库实现了《GM/T 0005-2021 随机性检测规范》中描述的15种随机性检测方法：
-
-- [ 1] 单比特频数检测      [MonoBitFrequencyTest](./mono_bit_frequency.go)
-- [ 2] 块内频数检测        [FrequencyWithinBlockTest](./frequency_within_block.go)
-- [ 3] 扑克检测           [PokerTest](./poker.go)
-- [ 4] 重叠子序列检测      [OverlappingTemplateMatchingTest](./overlapping.go)
-- [ 5] 游程总数检测        [RunsTest](./runs.go)
-- [ 6] 游程分布检测        [RunsDistributionTest](./runs_distribution.go)
-- [ 7] 块内最大游程检测     [LongestRunOfOnesInABlockTest](./longest_run_of_ones_In_block.go)
-- [ 8] 二元推导检测       [BinaryDerivativeTest](./binary_derivative.go)
-- [ 9] 自相关检测         [AutocorrelationTest](./autocorrelation.go)
-- [10] 矩阵秩检测        [MatrixRankTest](./matrix_rank.go)
-- [11] 累加和检测        [CumulativeTest](./cumulative.go)
-- [12] 近似熵检测        [ApproximateEntropyTest](./approximate_entropy.go)
-- [13] 线型复杂度检测     [LinearComplexityTest](./linear_complexity.go)
-- [14] Maurer通用统计检测       [MaurerUniversalTest](./maurers_universal.go)
-- [15] 离散傅里叶检测     [DiscreteFourierTransformTest](./discrete_fourier_transform.go)
-
-检测参数说明：
-
-- 样本长度：`10^6`比特
-- 显著水平：`α = 0.01`
-- 样本均匀性分布检测的显著性水平： `ατ = 0.0001`
-- 子区间数量： `k = 10`
-
-各算法检测参数如下：
-
-| 序号  | 检测项目 | 参数           |
-|-----| --- |--------------|
-| 1   | 单比特频数检测  | -            |
-| 2   | 块内频数检测   | m = 10000    |
-| 3   | 扑克检测     | m = 4,8      |
-| 4   | 重叠子序列检测  | m = 3,5      |
-| 5   | 游程总数检测   | -            |
-| 6   | 游程分布检测   | -            |
-| 7   | 块内最大游程检测 | m = 10000    |
-| 8   | 二元推导检测   | k = 3,7      |
-| 9   | 自相关检测    | d = 1,2,8,16 |
-| 10  |  矩阵秩检测   | -            |
-| 11  |  累加和检测   | -            |
-| 12  |  近似熵检测   | m = 2,5      |
-| 13  |  线型复杂度检测 | m = 500,1000 |
-| 14  |  Maurer通用统计检测  | L=7,Q=1280   |
-| 15  |  离散傅里叶检测 | -            |
-
-## 工具
-
-若您需要使用相关测试工具需要您手动编译程序，详见相应工具说明文档：
-
-- [检测数据生成工具 rdgen](./tools/rdgen/README.md)
-- [随机新检测工具 rddetector](./tools/rddetector/README.md)
 

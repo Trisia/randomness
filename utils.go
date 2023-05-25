@@ -2,12 +2,11 @@ package randomness
 
 import (
 	"bufio"
+	rand2 "crypto/rand"
 	"fmt"
 	"math"
-	"math/rand"
 	"os"
 	"strings"
-	"time"
 )
 
 const (
@@ -361,28 +360,17 @@ func B2bitArr(src []byte) []bool {
 	return res
 }
 
-// GroupBit 生成一组 10^6 比特的监测序列
+// GroupBit 生成一组 10^6 比特的检测序列
 func GroupBit() []bool {
-	n := 1000_000
-	bits := make([]bool, 0, n)
-	rand.Seed(time.Now().Unix())
-	for i := 0; i < n; i++ {
-		if rand.Int()%2 == 1 {
-			bits = append(bits, true)
-		} else {
-			bits = append(bits, false)
-		}
-	}
-	return bits
+	return GroupSecBit()
 }
 
 // GroupSecBit 生成一组测试数据 长度为 10^6 比特
 func GroupSecBit() []bool {
 	n := 1000_000
 	bits := make([]bool, 0, n)
-
 	buf := make([]byte, n/8)
-	_, _ = rand.Read(buf)
+	_, _ = rand2.Read(buf)
 	for _, b := range buf {
 		bits = append(bits, B2bit(b)...)
 	}

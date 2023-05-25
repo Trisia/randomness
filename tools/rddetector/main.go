@@ -67,18 +67,10 @@ func main() {
 		flag.Usage()
 		return
 	}
-	_ = os.MkdirAll(filepath.Dir(reportPath), os.FileMode(0600))
 
 	n := NumWorkers
 	out := make(chan *R)
 	jobs := make(chan string)
-
-	w, err := os.OpenFile(reportPath, os.O_RDWR|os.O_TRUNC|os.O_CREATE, os.FileMode(0600))
-	if err != nil {
-		_, _ = fmt.Fprintln(os.Stderr, "无法打开写入文件 "+reportPath)
-		return
-	}
-	defer w.Close()
 
 	var wg sync.WaitGroup
 	s, sbit := toBeTestFileNum(inputPath)
@@ -98,11 +90,19 @@ func main() {
 		hdr = Header_1E8
 		worker = worker_1E8
 	default:
-		_, _ = fmt.Fprintf(os.Stderr, "无法识别待检测数据规模 %d, 支持单文件规模 [20 000, 1 000 000, 100 000 000]\n", sbit)
+		_, _ = fmt.Fprintf(os.Stderr, "无法识别待检测数据规模 %d 程序退出, 支持单文件规模 [20 000, 1 000 000, 100 000 000]\n\n", sbit)
 		return
 	}
-	_, _ = w.WriteString(hdr)
 
+	_ = os.MkdirAll(filepath.Dir(reportPath), os.FileMode(0600))
+	w, err := os.OpenFile(reportPath, os.O_RDWR|os.O_TRUNC|os.O_CREATE, os.FileMode(0600))
+	if err != nil {
+		_, _ = fmt.Fprintln(os.Stderr, "无法打开写入文件 "+reportPath)
+		return
+	}
+	defer w.Close()
+
+	_, _ = w.WriteString(hdr)
 	start := time.Now()
 
 	// 启动数据写入消费者
@@ -131,7 +131,8 @@ func toBeTestFileNum(p string) (samples int, bits int64) {
 		if strings.HasSuffix(p, ".bin") || strings.HasSuffix(p, ".dat") {
 			samples++
 		}
-		if fInfo.Size()*8 > bits {
+
+		if fInfo != nil && fInfo.Size()*8 > bits {
 			bits = fInfo.Size() * 8
 		}
 

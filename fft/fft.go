@@ -1,4 +1,18 @@
-package ttf
+// Package fft provides a fast discrete Fourier transformation algorithm.
+//
+// Implemented is the 1-dimensional DFT of complex input data
+// for with input lengths which are powers of 2.
+//
+// The algorithm is non-recursive and works in-place overwriting
+// the input array.
+//
+// Before doing the transform on acutal data, allocate
+// an FFT object with t := fft.New(N) where N is the length of the
+// input array.
+// Then multiple calls to t.Transform(x) can be done with
+// different input vectors having the same length.
+
+package fft
 
 import (
 	"fmt"
@@ -32,20 +46,6 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 For more information, please refer to <http://unlicense.org>
 */
-
-// Package fft provides a fast discrete Fourier transformation algorithm.
-//
-// Implemented is the 1-dimensional DFT of complex input data
-// for with input lengths which are powers of 2.
-//
-// The algorithm is non-recursive and works in-place overwriting
-// the input array.
-//
-// Before doing the transform on acutal data, allocate
-// an FFT object with t := fft.New(N) where N is the length of the
-// input array.
-// Then multiple calls to t.Transform(x) can be done with
-// different input vectors having the same length.
 
 // ALGORITHM
 // Example of the alogrithm with N=8 (P=3)
@@ -104,11 +104,8 @@ func (f FFT) Transform(x []complex128) []complex128 {
 		panic("Input dimension mismatches: FFT is not initialized, or called with wrong input.")
 	}
 
-	// Reorder the input array.
-	// bitReversalPermutation(x, f.p)
-	f.inputPermutation(x)
+	inputPermutation(x, f.perm)
 
-	// Do the butterfly with index i and j.
 	butterfly := func(k, o, l, s int) {
 		i := k + o
 		j := i + l
@@ -116,18 +113,16 @@ func (f FFT) Transform(x []complex128) []complex128 {
 	}
 
 	n := 1
-	s := f.N // Stride
+	s := f.N
 	for p := 1; p <= f.p; p++ {
-		n <<= 1
 		s >>= 1
-		B := f.N / n // Number of blocks.
-		for b := 0; b < B; b++ {
-			K := f.N / (2 * B) // Half block length.
-			o := 2 * b * K     // Block offset.
-			for k := 0; k < K; k++ {
-				butterfly(k, o, K, s)
+		for b := 0; b < s; b++ {
+			o := 2 * b * n
+			for k := 0; k < n; k++ {
+				butterfly(k, o, n, s)
 			}
 		}
+		n <<= 1
 	}
 	return x
 }
@@ -177,11 +172,11 @@ func permutationIndex(P int) []int {
 
 // inputPermutation permutes the input vector in the order
 // needed for the transformation.
-func (f FFT) inputPermutation(x []complex128) {
-	y := make([]complex128, len(x))
-	copy(y, x)
-	for i := 0; i < f.N; i++ {
-		x[i] = y[f.perm[i]]
+func inputPermutation(x []complex128, p []int) {
+	for i := range p {
+		if k := p[i]; i < k {
+			x[i], x[k] = x[k], x[i]
+		}
 	}
 }
 

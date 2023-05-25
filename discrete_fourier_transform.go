@@ -14,7 +14,7 @@ import (
 	"math"
 	"math/cmplx"
 
-	"github.com/Trisia/randomness/ttf"
+	"github.com/Trisia/randomness/fft"
 )
 
 // DiscreteFourierTransform 离散傅里叶检测
@@ -47,7 +47,7 @@ func DiscreteFourierTransformTest(bits []bool) (float64, float64) {
 	}
 
 	// 傅里叶变换
-	f, err := ttf.New(N)
+	f, err := fft.New(N)
 	if err != nil {
 		panic(err)
 	}

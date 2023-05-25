@@ -43,8 +43,10 @@ const Header_2E4 = "源数据," +
 	"[ 9] Q 自相关检测 d=8," +
 	"[ 9] P 自相关检测 d=16," +
 	"[ 9] Q 自相关检测 d=16," +
-	"[10] P 累加和检测," +
-	"[10] Q 累加和检测," +
+	"[10] P 累加和检测 前向," +
+	"[10] Q 累加和检测 前向," +
+	"[10] P 累加和检测 后向," +
+	"[10] Q 累加和检测 后向," +
 	"[11] P 近似熵检测 m=2," +
 	"[11] Q 近似熵检测 m=2," +
 	"[11] P 近似熵检测 m=5," +
@@ -145,7 +147,11 @@ func worker_2E4(jobs <-chan string, out chan<- *R) {
 		p, q = randomness.CumulativeTest(bits, true)
 		PArr = append(PArr, p)
 		QArr = append(QArr, q)
-		log.Printf("[%s] 累加和检测 P: %.5f Q: %.5f", filename, p, q)
+		log.Printf("[%s] 累加和检测 前向 P: %.5f Q: %.5f", filename, p, q)
+		p, q = randomness.CumulativeTest(bits, false)
+		PArr = append(PArr, p)
+		QArr = append(QArr, q)
+		log.Printf("[%s] 累加和检测 后向 P: %.5f Q: %.5f", filename, p, q)
 
 		// [11] 近似熵检测
 		p, q = randomness.ApproximateEntropyProto(bits, 2)
