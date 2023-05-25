@@ -106,11 +106,13 @@ func resultWriter(in <-chan *R, w io.StringWriter, cnt []int32, wg *sync.WaitGro
 var (
 	inputPath  string // 参数文件输入路径
 	reportPath string // 生成的监测报告位置
+	NumWorkers int    // 工作线程数
 )
 
 func init() {
 	flag.StringVar(&inputPath, "i", "", "待检测随机数文件位置")
 	flag.StringVar(&reportPath, "o", "RandomnessTestReport.csv", "待检测随机数文件位置")
+	flag.IntVar(&NumWorkers, "n", runtime.NumCPU(), "工作线程数 (在大数据检测时通过该参数控制并行数量防止内存不足问题)")
 	flag.Usage = usage
 }
 func usage() {
@@ -133,7 +135,8 @@ func main() {
 	}
 	_ = os.MkdirAll(filepath.Dir(reportPath), os.FileMode(0600))
 
-	n := runtime.NumCPU()
+	n := NumWorkers
+	//n := runtime.NumCPU()
 	out := make(chan *R)
 	jobs := make(chan string)
 
