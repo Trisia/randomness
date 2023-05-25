@@ -11,29 +11,21 @@ import (
 	"runtime"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"time"
 )
 
 type R struct {
 	Name string
-	P    []float64
+	P    []float64 // 样板通过率	  should >= 0.01
+	Q    []float64 // 样本分布均匀性 should >= 0.0001
 }
 
 // 结果集写入文件工作器
 func resultWriter(in <-chan *R, w io.StringWriter, wg *sync.WaitGroup) {
 	for r := range in {
-		if len(passCount) == 0 {
-			// 初始化通过检测的样本数
-			passCount = make([]int32, len(r.P))
-		}
-
 		_, _ = w.WriteString(r.Name)
 		for j := 0; j < len(r.P); j++ {
-			if r.P[j] >= 0.01 {
-				atomic.AddInt32(&passCount[j], 1)
-			}
-			_, _ = w.WriteString(fmt.Sprintf(", %0.6f", r.P[j]))
+			_, _ = w.WriteString(fmt.Sprintf(", %0.6f, %0.6f", r.P[j], r.Q[j]))
 		}
 		_, _ = w.WriteString("\n")
 		wg.Done()
@@ -42,10 +34,9 @@ func resultWriter(in <-chan *R, w io.StringWriter, wg *sync.WaitGroup) {
 }
 
 var (
-	inputPath  string  // 参数文件输入路径
-	reportPath string  // 生成的监测报告位置
-	NumWorkers int     // 工作线程数
-	passCount  []int32 // 通过检测的样本数
+	inputPath  string // 参数文件输入路径
+	reportPath string // 生成的监测报告位置
+	NumWorkers int    // 工作线程数
 )
 
 func init() {
@@ -129,11 +120,6 @@ func main() {
 	})
 
 	wg.Wait()
-	_, _ = w.WriteString("总计")
-	for i := 0; i < len(passCount); i++ {
-		_, _ = w.WriteString(fmt.Sprintf(", %d", passCount[i]))
-	}
-	_, _ = w.WriteString("\n")
 
 	log.Printf("检测完成 耗时 %s 检测报告: %s\n", time.Since(start), reportPath)
 }
