@@ -21,11 +21,13 @@ func Cumulative(data []byte) *TestResult {
 }
 
 // CumulativeTestBytes 累加和检测
+// forward: true 前向, false 后向
 func CumulativeTestBytes(data []byte, forward bool) (float64, float64) {
 	return CumulativeTest(B2bitArr(data), forward)
 }
 
 // CumulativeTest 累加和检测
+// forward: true 前向, false 后向
 func CumulativeTest(bits []bool, forward bool) (float64, float64) {
 	n := len(bits)
 
