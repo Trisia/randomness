@@ -17,7 +17,8 @@ const Header_1E6 = "源数据," +
 	"[ 4] 重叠子序列检测 m=5 P1,重叠子序列检测 m=5 P2," +
 	"[ 5] 游程总数检测," +
 	"[ 6] 游程分布检测," +
-	"[ 7] 块内最大游程检测 m=10000," +
+	"[ 7] 块内最大“1”游程检测 m=10000," +
+	"[ 7] 块内最大“0”游程检测 m=10000," +
 	"[ 8] 二元推导检测 k=3," +
 	"[ 8] 二元推导检测 k=7," +
 	"[ 9] 自相关检测 d=1," +
@@ -82,7 +83,10 @@ func worker_1E6(jobs <-chan string, out chan<- *R) {
 		// [7] 块内最大游程检测
 		p, _ = randomness.LongestRunOfOnesInABlockTest(bits, true)
 		arr = append(arr, p)
-		log.Printf("[%s] 块内最大游程检测 P: %.5f", filename, p)
+		log.Printf("[%s] 块内最大“1”游程检测 P: %.5f", filename, p)
+		p, _ = randomness.LongestRunOfOnesInABlockTest(bits, false)
+		arr = append(arr, p)
+		log.Printf("[%s] 块内最大“0”游程检测 P: %.5f", filename, p)
 
 		// [8] 二元推导检测
 		p, _ = randomness.BinaryDerivativeProto(bits, 3)
