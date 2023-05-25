@@ -86,7 +86,7 @@ func main() {
 	var wg sync.WaitGroup
 	var cnt = make([]int32, 25)
 	s, sbit := toBeTestFileNum(inputPath)
-	log.Printf("启动 随机性检测，待检测样本总数 s = %d 样本数据规模 bits = %E\n", s, sbit)
+	log.Printf("启动 随机性检测，待检测样本总数 s = %d 样本数据规模 bits = %d\n", s, sbit)
 	wg.Add(s)
 
 	var worker func(jobs <-chan string, out chan<- *R) = nil
