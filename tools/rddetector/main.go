@@ -128,14 +128,16 @@ func main() {
 func toBeTestFileNum(p string) (samples int, bits int64) {
 	// 结果工作器
 	_ = filepath.Walk(p, func(p string, fInfo fs.FileInfo, _ error) error {
+		if fInfo == nil || fInfo.IsDir() {
+			return nil
+		}
+
 		if strings.HasSuffix(p, ".bin") || strings.HasSuffix(p, ".dat") {
 			samples++
-
-			if fInfo != nil && !fInfo.IsDir() && fInfo.Size()*8 > bits {
+			if fInfo.Size()*8 > bits {
 				bits = fInfo.Size() * 8
 			}
 		}
-
 		return nil
 	})
 	return samples, bits
