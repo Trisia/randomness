@@ -103,6 +103,7 @@ func PeriodDetect(source io.Reader) (bool, error) {
 		}
 		resArr := Round12(buf)
 		for idx, result := range resArr {
+			distributions[idx][i] = result.Q
 			if result.Pass {
 				counters[idx]++
 			}
