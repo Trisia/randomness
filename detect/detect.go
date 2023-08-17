@@ -103,6 +103,7 @@ func PeriodDetect(source io.Reader) (bool, error) {
 		}
 		resArr := Round12(buf)
 		for idx, result := range resArr {
+			distributions[idx][i] = result.Q
 			if result.Pass {
 				counters[idx]++
 			}
@@ -157,7 +158,6 @@ func Threshold(s int) int {
 }
 
 // ThresholdQ 样本分布均匀性 (k=10)
-//
 func ThresholdQ(qValues []float64) float64 {
 	var dist [10]int
 	for _, q := range qValues {
