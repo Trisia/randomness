@@ -51,12 +51,12 @@ func RunsTest(bits []bool) (float64, float64) {
 	Pi /= float64(n)
 
 	// Step 3
-	V := (float64(V_obs) - 2.0*float64(n)*Pi*(1.0-Pi)) / (2.0 * math.Sqrt(float64(n)) * Pi * (1.0 - Pi))
+	V := (float64(V_obs) - 2.0*float64(n)*Pi*(1.0-Pi)) / (2.0 * math.Sqrt(float64(2*n)) * Pi * (1.0 - Pi))
 
 	// Step 4
-	P = math.Erfc(math.Abs(V) / math.Sqrt(2))
+	P = math.Erfc(math.Abs(V))
 
 	// Step 5
-	Q = math.Erfc(V / math.Sqrt(2)) / 2.0
+	Q = math.Erfc(V) / 2.0
 	return P, Q
 }

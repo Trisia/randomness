@@ -66,7 +66,8 @@ func FrequencyWithinBlockProto(bits []bool, m int) (float64, float64) {
 			}
 		}
 		Pi = Pi / float64(m)
-		V += (Pi - 0.5) * (Pi - 0.5)
+		Pi = Pi - 0.5
+		V += Pi * Pi
 	}
 	V *= 4.0 * float64(m)
 	P = igamc(float64(N)/2.0, V/2.0)

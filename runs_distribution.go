@@ -47,10 +47,7 @@ func RunsDistributionTest(bits []bool) (float64, float64) {
 	var cur bool = bits[0]
 	cnt := 0
 
-	// 增加一终止位，避免特殊处理
-	bits = append(bits, !(bits[n-1]))
-
-	for i := 0; i <= n; i++ {
+	for i := 0; i < n; i++ {
 		if bits[i] == cur {
 			cnt++
 		} else {
@@ -65,6 +62,15 @@ func RunsDistributionTest(bits []bool) (float64, float64) {
 			cur = bits[i]
 			cnt = 1
 		}
+	}
+	// 特殊处理结尾
+	if cnt > k {
+		cnt = k
+	}
+	if cur {
+		b[cnt-1]++
+	} else {
+		g[cnt-1]++
 	}
 
 	// Step 3

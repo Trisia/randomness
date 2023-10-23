@@ -35,83 +35,42 @@ func ApproximateEntropyTestBytes(data []byte, m int) (float64, float64) {
 // m: m长度
 func ApproximateEntropyProto(bits []bool, m int) (float64, float64) {
 	n := len(bits)
+	numOfBlocks := float64(n)
 	if n == 0 {
 		panic("please provide test bits")
 	}
-	bits2 := bits
 	var pattern []int
-	var mask int
-	var tmp int = 0
-	var Cjm float64
-	var phim, phim1 float64 = 0, 0
-	var ApEn float64
+	var ApEn [2]float64
 	var V float64
 	var P float64
+	r := 0
 
-	// round1
-	for i := 0; i < m-1; i++ {
-		bits = append(bits, bits[i])
-	}
-	pattern = make([]int, 1<<m)
-	mask = (1 << m) - 1
-
-	var b bool
-	for i := 0; i < m-1; i++ {
-		tmp <<= 1
-		b, bits = bits[0], bits[1:]
-		if b {
-			tmp++
+	for blockSize := m; blockSize <= m+1; blockSize++ {
+		powLen := 1<<blockSize
+		pattern = make([]int, powLen)
+		for i := 0; i < n; i++ {
+			k := 1
+			for j := 0; j < blockSize; j++ {
+				k <<= 1
+				if bits[(i+j)%n] {
+					k++
+				}
+			}
+			pattern[k-powLen]++
 		}
-	}
-
-	for i := 0; i < n; i++ {
-		tmp <<= 1
-		b, bits = bits[0], bits[1:]
-		if b {
-			tmp++
+		sum := float64(0.0)
+		for i := 0; i < powLen; i++ {
+			if pattern[i] > 0 {
+				sum += float64(pattern[i]) * math.Log(float64(pattern[i])/numOfBlocks)
+			}
 		}
-		pattern[tmp&mask]++
+		sum /= numOfBlocks
+		ApEn[r] = sum
+		r++
 	}
-
-	for i := 0; i < (1 << m); i++ {
-		Cjm = float64(pattern[i]) / float64(n)
-		phim += Cjm * math.Log(Cjm)
-	}
-
-	// round2
-	bits = bits2
-	m++
-	for i := 0; i < m-1; i++ {
-		bits = append(bits, bits[i])
-	}
-	pattern = make([]int, 1<<m)
-	mask = (1 << m) - 1
-
-	for i := 0; i < m-1; i++ {
-		tmp <<= 1
-		b, bits = bits[0], bits[1:]
-		if b {
-			tmp++
-		}
-	}
-	for i := 0; i < n; i++ {
-		tmp <<= 1
-		b, bits = bits[0], bits[1:]
-		if b {
-			tmp++
-		}
-		pattern[tmp&mask]++
-	}
-
-	for i := 0; i < (1 << m); i++ {
-		Cjm = float64(pattern[i]) / float64(n)
-		phim1 += Cjm * math.Log(Cjm)
-	}
-	// --
-	m--
-	ApEn = phim - phim1
-	V = 2.0 * float64(n) * (math.Log(2) - ApEn)
-	_2m := 1 << m
-	P = igamc(float64(_2m)/2.0, V/2.0)
+	apen := ApEn[0] - ApEn[1]
+	V = 2.0 * numOfBlocks * (math.Log(2) - apen)
+	_2mMinus1 := 1 << (m - 1)
+	P = igamc(float64(_2mMinus1), V/2.0)
 	return P, P
 }

@@ -68,18 +68,12 @@ func OverlappingTemplateMatchingProto(bits []bool, m int) (p1 float64, p2 float6
 	var mask2 int = (1 << (m - 1)) - 1
 	var mask3 int = (1 << (m - 2)) - 1
 
-	// Step 1, construct new bits
-	bits = append(bits, bits[:m-1]...)
-
 	// Step 2
-	var b bool
 	tmp := subsequencepattern(bits, m-1)
-	bits = bits[m-1:]
 
 	for i := 0; i < n; i++ {
 		tmp <<= 1
-		b, bits = bits[0], bits[1:]
-		if b {
+		if bits[(i+m-1)%n] {
 			tmp++
 		}
 		patterns1[tmp&mask1]++

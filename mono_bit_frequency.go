@@ -12,6 +12,7 @@ package randomness
 
 import (
 	"math"
+	"math/bits"
 )
 
 // MonoBitFrequency 单比特频数检测
@@ -22,7 +23,20 @@ func MonoBitFrequency(data []byte) *TestResult {
 
 // MonoBitFrequencyTestBytes 单比特频数检测
 func MonoBitFrequencyTestBytes(data []byte) (float64, float64) {
-	return MonoBitFrequencyTest(B2bitArr(data))
+	if len(data) == 0 {
+		panic("please provide test bits")
+	}
+	n := len(data) * 8
+	S := 0
+	var V, P, Q float64
+
+	for _, b := range data {
+		S += bits.OnesCount8(b)<<1 - 8
+	}
+	V = float64(S) / math.Sqrt(float64(n))
+	P = math.Erfc(math.Abs(V) / math.Sqrt(2))
+	Q = math.Erfc(V/math.Sqrt(2)) / 2
+	return P, Q
 }
 
 // MonoBitFrequencyTest 单比特频数检测
