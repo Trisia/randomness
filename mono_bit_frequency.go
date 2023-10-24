@@ -33,9 +33,9 @@ func MonoBitFrequencyTestBytes(data []byte) (float64, float64) {
 	for _, b := range data {
 		S += bits.OnesCount8(b)<<1 - 8
 	}
-	V = float64(S) / math.Sqrt(float64(n))
-	P = math.Erfc(math.Abs(V) / math.Sqrt(2))
-	Q = math.Erfc(V/math.Sqrt(2)) / 2
+	V = float64(S) / math.Sqrt(float64(2*n))
+	P = math.Erfc(math.Abs(V))
+	Q = math.Erfc(V) / 2
 	return P, Q
 }
 
@@ -55,8 +55,8 @@ func MonoBitFrequencyTest(bits []bool) (float64, float64) {
 			S--
 		}
 	}
-	V = float64(S) / math.Sqrt(float64(n))
-	P = math.Erfc(math.Abs(V) / math.Sqrt(2))
-	Q = math.Erfc(V/math.Sqrt(2)) / 2
+	V = float64(S) / math.Sqrt(float64(2*n))
+	P = math.Erfc(math.Abs(V))
+	Q = math.Erfc(V) / 2
 	return P, Q
 }
