@@ -29,7 +29,7 @@ func PokerTestBytes(data []byte, m int) (float64, float64) {
 		panic("please provide valid test bits")
 	}
 	if m != 4 && m != 8 {
-		panic("just support m=4 or m=8")
+		return PokerProto(B2bitArr(data), m)
 	}
 	// 2^m
 	_2m := 1 << m
