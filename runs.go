@@ -50,7 +50,7 @@ func RunsTest(bits []bool) (float64, float64) {
 	}
 	Pi /= float64(n)
 
-	// Step 3
+	// Step 3, 第四、五步的除math.Sqrt(2)，放到这里提前处理，减少math.Sqrt的调用。
 	V := (float64(V_obs) - 2.0*float64(n)*Pi*(1.0-Pi)) / (2.0 * math.Sqrt(float64(2*n)) * Pi * (1.0 - Pi))
 
 	// Step 4

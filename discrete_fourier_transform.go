@@ -67,7 +67,7 @@ func DiscreteFourierTransformTest(bits []bool) (float64, float64) {
 		}
 	}
 
-	// Step 7
+	// Step 7，最后V除math.Sqrt(2)，放到这里提前处理，减少math.Sqrt的调用。
 	V := (float64(N_1) - N_0) / math.Sqrt(0.95*0.05*float64(2.0*n)/3.8)
 	P := math.Erfc(math.Abs(V))
 	Q := math.Erfc(V) / 2

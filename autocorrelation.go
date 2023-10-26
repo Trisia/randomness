@@ -50,8 +50,8 @@ func AutocorrelationProto(bits []bool, d int) (float64, float64) {
 		}
 	}
 
-	V = 2.0 * (float64(Ad) - (float64(n-d) / 2.0)) / math.Sqrt(float64(n-d))
-	P := math.Erfc(math.Abs(V) / math.Sqrt(2))
-	Q := math.Erfc(V/math.Sqrt(2)) / 2
+	V = 2.0 * (float64(Ad) - (float64(n-d) / 2.0)) / math.Sqrt(2*float64(n-d)) // 提前对V除以2的平方根，避免求P Q时再求解
+	P := math.Erfc(math.Abs(V))
+	Q := math.Erfc(V) / 2
 	return P, Q
 }

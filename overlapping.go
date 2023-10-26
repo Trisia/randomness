@@ -68,6 +68,11 @@ func OverlappingTemplateMatchingProto(bits []bool, m int) (p1 float64, p2 float6
 	var mask2 int = (1 << (m - 1)) - 1
 	var mask3 int = (1 << (m - 2)) - 1
 
+	// 本来这里需要取bits后面预先插入bits[:m-1]，使得bits[m-1:]的长度依然是n。
+	// 现在改成不对bits切片做预处理，而是取位时对索引进行模操作。
+	// 两种实现各有利弊：原来的实现迭代取位时没啥计算，但是需要对较大的切片进行预处理（内存操作）；
+	// 而最新实现正好相反。
+
 	// Step 2
 	tmp := subsequencepattern(bits, m-1)
 

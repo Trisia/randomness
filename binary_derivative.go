@@ -61,13 +61,13 @@ func BinaryDerivativeProto(bits []bool, k int) (float64, float64) {
 			S--
 		}
 	}
-	// Step 4
-	V = float64(S) / math.Sqrt(float64(n-k))
+	// Step 4, 提前对V除以2的平方根，避免求P Q时再求解
+	V = float64(S) / math.Sqrt(2*float64(n-k))
 
 	// Step 5
-	P := math.Erfc(math.Abs(V) / math.Sqrt(2))
+	P := math.Erfc(math.Abs(V))
 
 	// Step 6
-	Q := math.Erfc(V/math.Sqrt(2)) / 2
+	Q := math.Erfc(V) / 2
 	return P, Q
 }

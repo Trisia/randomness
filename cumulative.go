@@ -56,12 +56,12 @@ func CumulativeTest(bits []bool, forward bool) (float64, float64) {
 		Z = max(Z, abs(S))
 	}
 
-	_n := float64(n)
+	sqrtN := math.Sqrt(float64(n)) // 提前求平方根，避免下面多次求平方根
 	for i := ((-n / Z) + 1) / 4; i <= ((n/Z)-1)/4; i++ {
-		P -= normal_CDF(float64((4*i+1)*Z)/math.Sqrt(_n)) - normal_CDF(float64((4*i-1)*Z)/math.Sqrt(_n))
+		P -= normal_CDF(float64((4*i+1)*Z)/sqrtN) - normal_CDF(float64((4*i-1)*Z)/sqrtN)
 	}
 	for i := ((-n / Z) - 3) / 4; i <= ((n/Z)-1)/4; i++ {
-		P += normal_CDF(float64((4*i+3)*Z)/math.Sqrt(_n)) - normal_CDF(float64((4*i+1)*Z)/math.Sqrt(_n))
+		P += normal_CDF(float64((4*i+3)*Z)/sqrtN) - normal_CDF(float64((4*i+1)*Z)/sqrtN)
 	}
 	return P, P
 }

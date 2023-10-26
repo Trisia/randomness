@@ -22,13 +22,15 @@ func PokerTest(bits []bool) (float64, float64) {
 }
 
 // PokerTestBytes 扑克检测
+// 这里直接对字节直接处理，避免字节切片到位切片的转换，同时提高效率。
+//
 // data: 检测序列
 // m: m长度，m=4,8
 func PokerTestBytes(data []byte, m int) (float64, float64) {
 	if len(data) == 0 {
 		panic("please provide valid test bits")
 	}
-	if m != 4 && m != 8 {
+	if m != 4 && m != 8 { // 如果m不是4也不是8，那么回退到位级别处理
 		return PokerProto(B2bitArr(data), m)
 	}
 	// 2^m
