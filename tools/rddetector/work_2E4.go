@@ -59,14 +59,14 @@ func worker_2E4(jobs <-chan string, out chan<- *R) {
 	for filename := range jobs {
 		buf, _ := os.ReadFile(filename)
 		bits := randomness.B2bitArr(buf)
-		buf = nil
 		PArr := make([]float64, 0, 64)
 		QArr := make([]float64, 0, 64)
 
 		log.Printf("[%s] 检测开始...\n", filename)
 
 		// [1] 单比特频数检测
-		p, q := randomness.MonoBitFrequencyTest(bits)
+		//p, q := randomness.MonoBitFrequencyTest(bits)
+		p, q := randomness.MonoBitFrequencyTestBytes(buf)
 		PArr = append(PArr, p)
 		QArr = append(QArr, q)
 		log.Printf("[%s] 单比特频数检测 P: %.5f Q: %.5f", filename, p, q)
@@ -78,14 +78,19 @@ func worker_2E4(jobs <-chan string, out chan<- *R) {
 		log.Printf("[%s] 块内频数检测 m=100_000 P: %.5f Q: %.5f", filename, p, q)
 
 		// [3] 扑克检测
-		p, q = randomness.PokerProto(bits, 4)
+		//p, q = randomness.PokerProto(bits, 4)
+		p, q = randomness.PokerTestBytes(buf, 4)
 		PArr = append(PArr, p)
 		QArr = append(QArr, q)
 		log.Printf("[%s] 扑克检测 m=4 P: %.5f Q: %.5f", filename, p, q)
-		p, q = randomness.PokerProto(bits, 8)
+		//p, q = randomness.PokerProto(bits, 8)
+		p, q = randomness.PokerTestBytes(buf, 8)
 		PArr = append(PArr, p)
 		QArr = append(QArr, q)
 		log.Printf("[%s] 扑克检测 m=8 P: %.5f Q: %.5f", filename, p, q)
+
+		// 下文中不再需要比特数组，释放以节约内存。
+		buf = nil
 
 		// [4] 重叠子序列检测
 		p1, p2, q1, q2 := randomness.OverlappingTemplateMatchingProto(bits, 3)
