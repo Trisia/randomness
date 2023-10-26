@@ -82,9 +82,9 @@ func MaurerUniversalTest(bits []bool) (float64, float64) {
 	}
 
 	sigma = math.Sqrt(variance[L]/float64(K)) * mutFactorC(L, K)
-	V = (sum/float64(K) - expected_value[L]) / sigma
-	P = math.Erfc(math.Abs(V) / math.Sqrt(2.0))
-	q := math.Erfc(V/math.Sqrt(2.0)) / 2
+	V = (sum/float64(K) - expected_value[L]) / (sigma*math.Sqrt(2.0)) // 避免求p q时V再除以math.Sqrt(2.0)
+	P = math.Erfc(math.Abs(V))
+	q := math.Erfc(V) / 2
 
 	return P, q
 }

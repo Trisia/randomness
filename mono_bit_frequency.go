@@ -12,6 +12,7 @@ package randomness
 
 import (
 	"math"
+	"math/bits"
 )
 
 // MonoBitFrequency 单比特频数检测
@@ -21,8 +22,22 @@ func MonoBitFrequency(data []byte) *TestResult {
 }
 
 // MonoBitFrequencyTestBytes 单比特频数检测
+// 这里直接对字节直接处理，避免字节切片到位切片的转换，同时提高效率。
 func MonoBitFrequencyTestBytes(data []byte) (float64, float64) {
-	return MonoBitFrequencyTest(B2bitArr(data))
+	if len(data) == 0 {
+		panic("please provide test bits")
+	}
+	n := len(data) * 8
+	S := 0
+	var V, P, Q float64
+
+	for _, b := range data {
+		S += bits.OnesCount8(b)<<1 - 8  // S += (bits.OnesCount8(b) - (8 - bits.OnesCount8(b)))
+	}
+	V = float64(S) / math.Sqrt(float64(2*n)) // 除math.Sqrt(2)，放到这里提前处理(n->2*n)，减少math.Sqrt的调用。
+	P = math.Erfc(math.Abs(V))
+	Q = math.Erfc(V) / 2
+	return P, Q
 }
 
 // MonoBitFrequencyTest 单比特频数检测
@@ -41,8 +56,8 @@ func MonoBitFrequencyTest(bits []bool) (float64, float64) {
 			S--
 		}
 	}
-	V = float64(S) / math.Sqrt(float64(n))
-	P = math.Erfc(math.Abs(V) / math.Sqrt(2))
-	Q = math.Erfc(V/math.Sqrt(2)) / 2
+	V = float64(S) / math.Sqrt(float64(2*n)) // 除math.Sqrt(2)，放到这里提前处理(n->2*n)，减少math.Sqrt的调用。
+	P = math.Erfc(math.Abs(V))
+	Q = math.Erfc(V) / 2
 	return P, Q
 }
