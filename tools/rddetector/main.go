@@ -33,13 +33,18 @@ func resultWriter(in <-chan *R, w io.StringWriter, wg *sync.WaitGroup) {
 
 }
 
+// Version 软件版本号
+const Version = "1.5.0"
+
 var (
-	inputPath  string // 参数文件输入路径
-	reportPath string // 生成的监测报告位置
-	NumWorkers int    // 工作线程数
+	inputPath   string // 参数文件输入路径
+	reportPath  string // 生成的监测报告位置
+	NumWorkers  int    // 工作线程数
+	VersionFlag bool   // 版本号
 )
 
 func init() {
+	flag.BoolVar(&VersionFlag, "v", false, "检测工具版本")
 	flag.StringVar(&inputPath, "i", "", "待检测随机数文件位置")
 	flag.StringVar(&reportPath, "o", "RandomnessTestReport.csv", "待检测随机数文件位置")
 	flag.IntVar(&NumWorkers, "n", runtime.NumCPU(), "工作线程数 (在大数据检测时通过该参数控制并行数量防止内存不足问题)")
@@ -48,7 +53,7 @@ func init() {
 	log.SetPrefix("[rddetector] ")
 }
 func usage() {
-	_, _ = fmt.Fprintf(os.Stderr, `randomness 随机性检测 rddetector 使用说明
+	_, _ = fmt.Fprintf(os.Stderr, `randomness 随机性检测 rddetector v%s 使用说明
 
 rddetector -i 待检测数据目录 [-o 生成报告位置]
 
@@ -56,12 +61,17 @@ rddetector -i 待检测数据目录 [-o 生成报告位置]
 
 	数据规模将由程序自动推断，支持单文件规模 [20 000 bit, 1 000 000 bit, 100 000 000 bit]
 
-`)
+`, Version)
 	flag.PrintDefaults()
 }
 
 func main() {
 	flag.Parse()
+	if VersionFlag {
+		_, _ = fmt.Fprintf(os.Stderr, "rddetector v%s\n", Version)
+		return
+	}
+
 	if inputPath == "" {
 		_, _ = fmt.Fprintf(os.Stderr, "	-i 参数缺失\n\n")
 		flag.Usage()
