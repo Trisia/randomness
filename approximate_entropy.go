@@ -30,7 +30,13 @@ func ApproximateEntropyTestBytes(data []byte, m int) (float64, float64) {
 	return ApproximateEntropyProto(B2bitArr(data), m)
 }
 
-// ApproximateEntropyProto 近似熵检测
+// ApproximateEntropyProto 近似熵检测, The purpose of the test is to compare the frequency of 
+// overlapping blocks of two consecutive/adjacent lengths (m and m+1) against the expected result for a 
+// random sequence. 这个实现参考自NIST的参考实现。
+// Reference:
+//   https://csrc.nist.gov/CSRC/media/Projects/Random-Bit-Generation/documents/sts-2_1_2.zip
+//   https://github.com/arcetri/sts/blob/master/src/tests/approximateEntropy.c
+//
 // bits: 待检测序列
 // m: m长度
 func ApproximateEntropyProto(bits []bool, m int) (float64, float64) {
@@ -45,19 +51,27 @@ func ApproximateEntropyProto(bits []bool, m int) (float64, float64) {
 	var P float64
 	r := 0
 
+	// Compute phi for blockSize=m and then blockSize=m+1.
+	// 初始实现中，按照《GM/T 0005-2021 随机性检测规范》，第一步要构造新的位序列：添加最开始的blockSize-1位数据到结尾，
+	// 目前的实现中，这一步被省去了。
 	for blockSize := m; blockSize <= m+1; blockSize++ {
+		// Compute how many counters are needed, i.e. how many different possible m-bit sub-sequences can possibly exist.
 		powLen := 1<<blockSize
+
 		pattern = make([]int, powLen)
+		// Compute the frequency of all the overlapping sub-sequences
+		// 这里的算法也可以采用重叠子序列检测方法实现的方式。
 		for i := 0; i < n; i++ {
 			k := 1
 			for j := 0; j < blockSize; j++ {
 				k <<= 1
-				if bits[(i+j)%n] {
+				if bits[(i+j)%n] { // (i+j) % n is used to avoid appending blockSize-1 bits in the end
 					k++
 				}
 			}
 			pattern[k-powLen]++
 		}
+		// Compute the the terms of the phi formula
 		sum := float64(0.0)
 		for i := 0; i < powLen; i++ {
 			if pattern[i] > 0 {
