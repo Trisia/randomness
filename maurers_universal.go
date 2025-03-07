@@ -41,8 +41,8 @@ func MaurerUniversalTest(bits []bool) (float64, float64) {
 	}
 	L := 7
 	Q := 1280
-	T := make([]int, 1<<L)
-	mask := (1 << L) - 1
+	T := make([]int, 1<<uint(L))
+	mask := (1 << uint(L)) - 1
 
 	var K int = n/L - Q
 	//var  n_disc int = n % L;
@@ -82,7 +82,7 @@ func MaurerUniversalTest(bits []bool) (float64, float64) {
 	}
 
 	sigma = math.Sqrt(variance[L]/float64(K)) * mutFactorC(L, K)
-	V = (sum/float64(K) - expected_value[L]) / (sigma*math.Sqrt(2.0)) // 避免求p q时V再除以math.Sqrt(2.0)
+	V = (sum/float64(K) - expected_value[L]) / (sigma * math.Sqrt(2.0)) // 避免求p q时V再除以math.Sqrt(2.0)
 	P = math.Erfc(math.Abs(V))
 	q := math.Erfc(V) / 2
 

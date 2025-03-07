@@ -1,3 +1,3 @@
 module github.com/Trisia/randomness
 
-go 1.18
+go 1.11

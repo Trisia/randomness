@@ -20,7 +20,7 @@ var (
 func init() {
 	// 参数解析
 	flag.IntVar(&s, "s", 1000, "Sample 样本数量")
-	flag.IntVar(&n, "n", 1000_000, "number 每个样本长度(bit)")
+	flag.IntVar(&n, "n", 1000000, "number 每个样本长度(bit)")
 	flag.StringVar(&output, "o", "target/data", "output 生成随机数文件存放目录")
 	flag.Usage = usage
 }

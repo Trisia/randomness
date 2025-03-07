@@ -4,6 +4,7 @@ import (
 	"bufio"
 	rand2 "crypto/rand"
 	"fmt"
+	"io/ioutil"
 	"math"
 	"os"
 	"strings"
@@ -298,15 +299,23 @@ func ceilPow2(N int) int {
 
 // B2bit 字节 转换为 bool数组
 func B2bit(b byte) []bool {
+	//b&0b10000000 > 0,
+	//b&0b01000000 > 0,
+	//b&0b00100000 > 0,
+	//b&0b00010000 > 0,
+	//b&0b00001000 > 0,
+	//b&0b00000100 > 0,
+	//b&0b00000010 > 0,
+	//b&0b00000001 > 0,
 	return []bool{
-		b&0b10000000 > 0,
-		b&0b01000000 > 0,
-		b&0b00100000 > 0,
-		b&0b00010000 > 0,
-		b&0b00001000 > 0,
-		b&0b00000100 > 0,
-		b&0b00000010 > 0,
-		b&0b00000001 > 0,
+		b&0x80 > 0,
+		b&0x40 > 0,
+		b&0x20 > 0,
+		b&0x10 > 0,
+		b&0x08 > 0,
+		b&0x04 > 0,
+		b&0x02 > 0,
+		b&0x01 > 0,
 	}
 }
 
@@ -367,7 +376,7 @@ func GroupBit() []bool {
 
 // GroupSecBit 生成一组测试数据 长度为 10^6 比特
 func GroupSecBit() []bool {
-	n := 1000_000
+	n := 1000000
 	bits := make([]bool, 0, n)
 	buf := make([]byte, n/8)
 	_, _ = rand2.Read(buf)
@@ -379,9 +388,9 @@ func GroupSecBit() []bool {
 
 // ReadGroup 从文件中读取一组二元序列
 func ReadGroup(filename string) []bool {
-	n := 1000_000
+	n := 1000000
 	bits := make([]bool, 0, n)
-	buf, err := os.ReadFile(filename)
+	buf, err := ioutil.ReadFile(filename)
 	if err != nil {
 		panic(err)
 	}
@@ -398,7 +407,7 @@ func ReadGroupInASCIIFormat(filename string) []bool {
 		panic(err)
 	}
 	defer file.Close()
-	n := 1000_000
+	n := 1000000
 	bits := make([]bool, n)
 	var b int
 	var num_0s, num_1s, bitsRead int

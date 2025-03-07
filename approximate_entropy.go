@@ -30,8 +30,8 @@ func ApproximateEntropyTestBytes(data []byte, m int) (float64, float64) {
 	return ApproximateEntropyProto(B2bitArr(data), m)
 }
 
-// ApproximateEntropyProto 近似熵检测, The purpose of the test is to compare the frequency of 
-// overlapping blocks of two consecutive/adjacent lengths (m and m+1) against the expected result for a 
+// ApproximateEntropyProto 近似熵检测, The purpose of the test is to compare the frequency of
+// overlapping blocks of two consecutive/adjacent lengths (m and m+1) against the expected result for a
 // random sequence. 这个实现参考自NIST的参考实现。
 // Reference:
 //   https://csrc.nist.gov/CSRC/media/Projects/Random-Bit-Generation/documents/sts-2_1_2.zip
@@ -56,7 +56,7 @@ func ApproximateEntropyProto(bits []bool, m int) (float64, float64) {
 	// 目前的实现中，这一步被省去了。
 	for blockSize := m; blockSize <= m+1; blockSize++ {
 		// Compute how many counters are needed, i.e. how many different possible m-bit sub-sequences can possibly exist.
-		powLen := 1<<blockSize
+		powLen := 1 << uint(blockSize)
 
 		pattern = make([]int, powLen)
 		// Compute the frequency of all the overlapping sub-sequences
@@ -84,7 +84,7 @@ func ApproximateEntropyProto(bits []bool, m int) (float64, float64) {
 	}
 	apen := ApEn[0] - ApEn[1]
 	V = 2.0 * numOfBlocks * (math.Log(2) - apen)
-	_2mMinus1 := 1 << (m - 1)
+	_2mMinus1 := 1 << uint(m-1)
 	P = igamc(float64(_2mMinus1), V/2.0)
 	return P, P
 }

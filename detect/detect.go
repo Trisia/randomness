@@ -22,7 +22,7 @@ func createDistributions(s, m int) [][]float64 {
 func FactoryDetect(source io.Reader) (bool, error) {
 	s := 50
 	t := Threshold(s)
-	buf := make([]byte, 1000_000/8)
+	buf := make([]byte, 1000000/8)
 	counters := make([]int, 15)
 	distributions := createDistributions(s, 15)
 	for i := 0; i < s; i++ {
@@ -57,7 +57,7 @@ func FactoryDetect(source io.Reader) (bool, error) {
 func PowerOnDetect(source io.Reader) (bool, error) {
 	s := 20
 	t := Threshold(s)
-	buf := make([]byte, 1000_000/8)
+	buf := make([]byte, 1000000/8)
 	counters := make([]int, 15)
 	distributions := createDistributions(s, 15)
 	for i := 0; i < s; i++ {

@@ -32,7 +32,7 @@ func RunsDistributionTest(bits []bool) (float64, float64) {
 	k := 0
 	for {
 		k++
-		_2k2 := 1 << int(k+2)
+		_2k2 := 1 << uint(k+2)
 		if float64(n-k+3)/float64(_2k2) < 5.0 {
 			break
 		}
@@ -82,9 +82,9 @@ func RunsDistributionTest(bits []bool) (float64, float64) {
 	// Step 4
 	for i := 0; i < k; i++ {
 		if i < k-1 {
-			e[i] = T / float64(int(1)<<(i+2))
+			e[i] = T / float64(int(1)<<uint(i+2))
 		} else {
-			e[i] = T / float64(int(1)<<(i+1))
+			e[i] = T / float64(int(1)<<uint(i+1))
 		}
 	}
 

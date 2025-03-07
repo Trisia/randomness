@@ -2,6 +2,7 @@ package randomness
 
 import (
 	"crypto/rand"
+	"io/ioutil"
 	"os"
 	"reflect"
 	"testing"
@@ -93,7 +94,7 @@ func TestGroupBit(t *testing.T) {
 		buf = append(buf, B2Byte(tmp))
 	}
 	_, _ = rand.Read(buf)
-	err := os.WriteFile("data/data.bin", buf, os.ModePerm)
+	err := ioutil.WriteFile("data/data.bin", buf, os.ModePerm)
 	if err != nil {
 		t.Fatal(err)
 	}

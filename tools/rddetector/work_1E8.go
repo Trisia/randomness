@@ -2,8 +2,8 @@ package main
 
 import (
 	"github.com/Trisia/randomness"
+	"io/ioutil"
 	"log"
-	"os"
 	"path"
 )
 
@@ -73,7 +73,7 @@ const Header_1E8 = "源数据," +
 // 数据规模为 100 000 000 个比特的随机数列检测工作器
 func worker_1E8(jobs <-chan string, out chan<- *R) {
 	for filename := range jobs {
-		buf, _ := os.ReadFile(filename)
+		buf, _ := ioutil.ReadFile(filename)
 		bits := randomness.B2bitArr(buf)
 		PArr := make([]float64, 0, 64)
 		QArr := make([]float64, 0, 64)
@@ -88,7 +88,7 @@ func worker_1E8(jobs <-chan string, out chan<- *R) {
 		log.Printf("[%s] 单比特频数检测 P: %.5f Q: %.5f", filename, p, p)
 
 		// [2] 块内频数检测
-		p, q = randomness.FrequencyWithinBlockProto(bits, 100_000)
+		p, q = randomness.FrequencyWithinBlockProto(bits, 100000)
 		PArr = append(PArr, p)
 		QArr = append(QArr, q)
 		log.Printf("[%s] 块内频数检测 m=100_000 P: %.5f Q: %.5f", filename, p, q)
@@ -207,7 +207,7 @@ func worker_1E8(jobs <-chan string, out chan<- *R) {
 		log.Printf("[%s] 近似熵检测 m=7 P: %.5f Q: %.5f", filename, p, q)
 
 		// [13] 线性复杂度检测
-		p, q = randomness.LinearComplexityProto(bits, 5_000)
+		p, q = randomness.LinearComplexityProto(bits, 5000)
 		PArr = append(PArr, p)
 		QArr = append(QArr, q)
 		log.Printf("[%s] 线性复杂度检测 m=5000 P: %.5f Q: %.5f", filename, p, q)

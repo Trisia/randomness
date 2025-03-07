@@ -50,7 +50,7 @@ func bootWorker(source io.Reader, n int, round func([]byte) []*randomness.TestRe
 func FactoryDetectFast(source io.Reader) (bool, error) {
 	s := 50
 	t := Threshold(s)
-	n := 1000_000 / 8
+	n := 1000000 / 8
 	counters := make([]int32, 15)
 	distributions := createDistributions(s, 15)
 	jobs, wg := bootWorker(source, n, Round15, counters, distributions)
@@ -80,7 +80,7 @@ func FactoryDetectFast(source io.Reader) (bool, error) {
 func PowerOnDetectFast(source io.Reader) (bool, error) {
 	s := 20
 	t := Threshold(s)
-	n := 1000_000 / 8
+	n := 1000000 / 8
 	counters := make([]int32, 15)
 	distributions := createDistributions(s, 15)
 	jobs, wg := bootWorker(source, n, Round15, counters, distributions)

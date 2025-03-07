@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"io/fs"
 	"log"
 	"os"
 	"path/filepath"
@@ -21,13 +20,13 @@ type R struct {
 }
 
 // 结果集写入文件工作器
-func resultWriter(in <-chan *R, w io.StringWriter, wg *sync.WaitGroup) {
+func resultWriter(in <-chan *R, w io.Writer, wg *sync.WaitGroup) {
 	for r := range in {
-		_, _ = w.WriteString(r.Name)
+		_, _ = w.Write([]byte(r.Name))
 		for j := 0; j < len(r.P); j++ {
-			_, _ = w.WriteString(fmt.Sprintf(", %0.6f, %0.6f", r.P[j], r.Q[j]))
+			_, _ = w.Write([]byte(fmt.Sprintf(", %0.6f, %0.6f", r.P[j], r.Q[j])))
 		}
-		_, _ = w.WriteString("\n")
+		_, _ = w.Write([]byte("\n"))
 		wg.Done()
 	}
 
@@ -122,7 +121,7 @@ func main() {
 		go worker(jobs, out)
 	}
 	// 结果工作器
-	go filepath.Walk(inputPath, func(p string, _ fs.FileInfo, _ error) error {
+	go filepath.Walk(inputPath, func(p string, _ os.FileInfo, _ error) error {
 		if strings.HasSuffix(p, ".bin") || strings.HasSuffix(p, ".dat") {
 			jobs <- p
 		}
@@ -137,7 +136,7 @@ func main() {
 // 获取待检测文件数量和规模
 func toBeTestFileNum(p string) (samples int, bits int64) {
 	// 结果工作器
-	_ = filepath.Walk(p, func(p string, fInfo fs.FileInfo, _ error) error {
+	_ = filepath.Walk(p, func(p string, fInfo os.FileInfo, _ error) error {
 		if fInfo == nil || fInfo.IsDir() {
 			return nil
 		}

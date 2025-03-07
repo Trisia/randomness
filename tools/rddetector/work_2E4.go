@@ -2,8 +2,8 @@ package main
 
 import (
 	"github.com/Trisia/randomness"
+	"io/ioutil"
 	"log"
-	"os"
 	"path"
 )
 
@@ -57,7 +57,7 @@ const Header_2E4 = "源数据," +
 // 数据规模为 20 000 个比特的随机数列检测工作器
 func worker_2E4(jobs <-chan string, out chan<- *R) {
 	for filename := range jobs {
-		buf, _ := os.ReadFile(filename)
+		buf, _ := ioutil.ReadFile(filename)
 		bits := randomness.B2bitArr(buf)
 		PArr := make([]float64, 0, 64)
 		QArr := make([]float64, 0, 64)

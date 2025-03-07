@@ -2,8 +2,8 @@ package main
 
 import (
 	"github.com/Trisia/randomness"
+	"io/ioutil"
 	"log"
-	"os"
 	"path"
 )
 
@@ -67,7 +67,7 @@ const Header_1E6 = "源数据," +
 // 数据规模为 1 000 000 个比特的随机数列检测工作器
 func worker_1E6(jobs <-chan string, out chan<- *R) {
 	for filename := range jobs {
-		buf, _ := os.ReadFile(filename)
+		buf, _ := ioutil.ReadFile(filename)
 		bits := randomness.B2bitArr(buf)
 
 		PArr := make([]float64, 0, 64)
@@ -83,7 +83,7 @@ func worker_1E6(jobs <-chan string, out chan<- *R) {
 		log.Printf("[%s] 单比特频数检测 P: %.5f Q: %.5f", filename, p, q)
 
 		// [2] 块内频数检测
-		p, q = randomness.FrequencyWithinBlockProto(bits, 10_000)
+		p, q = randomness.FrequencyWithinBlockProto(bits, 10000)
 		PArr = append(PArr, p)
 		QArr = append(QArr, q)
 		log.Printf("[%s] 块内频数检测 m=100_000 P: %.5f Q: %.5f", filename, p, q)

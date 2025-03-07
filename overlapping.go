@@ -58,15 +58,15 @@ func OverlappingTemplateMatchingProto(bits []bool, m int) (p1 float64, p2 float6
 	if n < 5 {
 		panic("please provide valid test bits")
 	}
-	patterns1 := make([]int, 1<<m)
-	patterns2 := make([]int, 1<<(m-1))
-	patterns3 := make([]int, 1<<(m-2))
+	patterns1 := make([]int, 1<<uint(m))
+	patterns2 := make([]int, 1<<uint(m-1))
+	patterns3 := make([]int, 1<<uint(m-2))
 	var Phi1, Phi2, Phi3 float64 = 0, 0, 0
 	var DPhi2, D2Phi2 float64 = 0, 0
 
-	var mask1 int = (1 << m) - 1
-	var mask2 int = (1 << (m - 1)) - 1
-	var mask3 int = (1 << (m - 2)) - 1
+	var mask1 int = (1 << uint(m)) - 1
+	var mask2 int = (1 << uint(m-1)) - 1
+	var mask3 int = (1 << uint(m-2)) - 1
 
 	// 本来这里需要取bits后面预先插入bits[:m-1]，使得bits[m-1:]的长度依然是n。
 	// 现在改成不对bits切片做预处理，而是取位时对索引进行模操作。

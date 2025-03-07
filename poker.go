@@ -34,7 +34,7 @@ func PokerTestBytes(data []byte, m int) (float64, float64) {
 		return PokerProto(B2bitArr(data), m)
 	}
 	// 2^m
-	_2m := 1 << m
+	_2m := 1 << uint(m)
 
 	patterns := make([]int, _2m)
 	N := (len(data) * 8) / m
@@ -47,7 +47,7 @@ func PokerTestBytes(data []byte, m int) (float64, float64) {
 		}
 	} else { // m = 4
 		for i := 0; i < len(data); i++ {
-			patterns[data[i] >> 4]++
+			patterns[data[i]>>4]++
 			patterns[data[i]&0x0f]++
 		}
 	}
@@ -74,7 +74,7 @@ func PokerProto(bits []bool, m int) (float64, float64) {
 		panic("please provide valid test bits")
 	}
 	// 2^m
-	_2m := 1 << m
+	_2m := 1 << uint(m)
 
 	patterns := make([]int, _2m)
 	N := n / m
