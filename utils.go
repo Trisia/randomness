@@ -205,49 +205,51 @@ func linearComplexity(a []bool, M int) int {
 	var L int = 0
 	var m int = -1
 	var d int = 0
-	var B_, C, P, T []int
 
-	B_ = make([]int, M)
-	C = make([]int, M)
-	P = make([]int, M)
-	T = make([]int, M)
+	// 预分配数组并初始化
+	B_ := make([]int, M)
+	C := make([]int, M)
+	P := make([]int, M)
+	T := make([]int, M)
 
-	for i := 0; i < M; i++ {
-		B_[i] = 0
-		C[i] = 0
-		T[i] = 0
-		P[i] = 0
-	}
 	C[0] = 1
 	B_[0] = 1
-	for {
-		if !(N_ < M) {
-			break
-		}
+
+	for N_ < M {
+		// 计算 d = a[N_] + sum(C[i]*a[N_-i]) mod 2
 		d = b2i(a[N_])
 		for i := 1; i <= L; i++ {
-			d += C[i] * b2i(a[N_-i])
+			if C[i] == 1 {
+				d ^= b2i(a[N_-i])
+			}
 		}
-		d = d % 2
+
 		if d == 1 {
-			for i := 0; i < M; i++ {
-				T[i] = C[i]
+			// 复制 C 到 T
+			copy(T, C)
+			// 清零 P
+			for i := range P {
 				P[i] = 0
 			}
+
+			// 计算 P = B_ shifted by (N_-m)
+			shift := N_ - m
 			for j := 0; j < M; j++ {
-				if B_[j] == 1 {
-					P[j+N_-m] = 1
+				if B_[j] == 1 && j+shift < M {
+					P[j+shift] = 1
 				}
 			}
+
+			// C = C + P mod 2 (使用 XOR)
 			for i := 0; i < M; i++ {
-				C[i] = (C[i] + P[i]) % 2
+				C[i] ^= P[i]
 			}
+
 			if L <= N_/2 {
 				L = N_ + 1 - L
 				m = N_
-				for i := 0; i < M; i++ {
-					B_[i] = T[i]
-				}
+				// 复制 T 到 B_
+				copy(B_, T)
 			}
 		}
 		N_++
@@ -362,9 +364,19 @@ func min(x, y int) int {
 
 // B2bitArr 转换字节数组为比特序列
 func B2bitArr(src []byte) []bool {
-	res := make([]bool, 0, len(src)*8)
-	for _, b := range src {
-		res = append(res, B2bit(b)...)
+	n := len(src) * 8
+	res := make([]bool, n)
+
+	for i, b := range src {
+		baseIdx := i * 8
+		res[baseIdx] = b&0x80 > 0
+		res[baseIdx+1] = b&0x40 > 0
+		res[baseIdx+2] = b&0x20 > 0
+		res[baseIdx+3] = b&0x10 > 0
+		res[baseIdx+4] = b&0x08 > 0
+		res[baseIdx+5] = b&0x04 > 0
+		res[baseIdx+6] = b&0x02 > 0
+		res[baseIdx+7] = b&0x01 > 0
 	}
 	return res
 }

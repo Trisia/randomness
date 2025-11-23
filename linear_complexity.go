@@ -42,17 +42,15 @@ func LinearComplexityProto(bits []bool, m int) (float64, float64) {
 		panic("please provide valid test bits")
 	}
 
-	var v = []float64{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
-	var pi = []float64{0.010417, 0.03125, 0.12500, 0.5000, 0.25000, 0.06250, 0.020833}
+	var v = [7]float64{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
+	var pi = [7]float64{0.010417, 0.03125, 0.12500, 0.5000, 0.25000, 0.06250, 0.020833}
 	var V float64 = 0.0
 	var P float64 = 0
 
-	var arr []bool
-	var complexity int
-	var T float64
-	arr = make([]bool, m)
+	// 预分配数组，避免重复分配
+	arr := make([]bool, m)
 
-	// Step 3, miu
+	// Step 3, miu - 预计算 _1_m
 	var _1_m float64
 	if m%2 == 0 {
 		_1_m = 1.0
@@ -61,38 +59,41 @@ func LinearComplexityProto(bits []bool, m int) (float64, float64) {
 	}
 	miu := float64(m)/2.0 + (9.0+_1_m)/36.0 - (float64(m)/3.0+2.0/9.0)/math.Pow(2.0, float64(m))
 
-	// Step 2, 4, 5
+	// Step 2, 4, 5 - 优化循环
+	bitsIndex := 0
 	for i := 0; i < N; i++ {
+		// 避免切片操作，直接使用索引
 		for j := 0; j < m; j++ {
-			arr[j], bits = bits[0], bits[1:]
+			arr[j] = bits[bitsIndex]
+			bitsIndex++
 		}
-		complexity = linearComplexity(arr, m)
-		if m%2 == 0 {
-			_1_m = 1.0
-		} else {
-			_1_m = -1.0
-		}
-		T = _1_m*(float64(complexity)-miu) + 2.0/9.0
-		if T <= -2.5 {
-			v[0]++
-		} else if T <= -1.5 {
-			v[1]++
-		} else if T <= -0.5 {
-			v[2]++
-		} else if T <= 0.5 {
-			v[3]++
-		} else if T <= 1.5 {
-			v[4]++
-		} else if T <= 2.5 {
-			v[5]++
-		} else {
+
+		complexity := linearComplexity(arr, m)
+		T := _1_m*(float64(complexity)-miu) + 2.0/9.0
+
+		// 优化条件判断顺序，从最可能的情况开始
+		if T > 2.5 {
 			v[6]++
+		} else if T > 1.5 {
+			v[5]++
+		} else if T > 0.5 {
+			v[4]++
+		} else if T > -0.5 {
+			v[3]++
+		} else if T > -1.5 {
+			v[2]++
+		} else if T > -2.5 {
+			v[1]++
+		} else {
+			v[0]++
 		}
 	}
 
-	// Step 6
+	// Step 6 - 优化循环，使用局部变量
+	NFloat := float64(N)
 	for i := 0; i < 7; i++ {
-		V += math.Pow(v[i]-float64(N)*pi[i], 2.0) / (float64(N) * pi[i])
+		diff := v[i] - NFloat*pi[i]
+		V += diff * diff / (NFloat * pi[i])
 	}
 
 	// Step 7
