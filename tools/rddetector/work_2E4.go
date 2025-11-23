@@ -1,10 +1,11 @@
 package main
 
 import (
-	"github.com/Trisia/randomness"
 	"io/ioutil"
 	"log"
 	"path"
+
+	"github.com/Trisia/randomness"
 )
 
 // Header_2E4 20_000 比特样本检测
@@ -169,7 +170,7 @@ func worker_2E4(jobs <-chan string, out chan<- *R) {
 		log.Printf("[%s] 近似熵检测 m=5 P: %.5f Q: %.5f", filename, p, q)
 
 		// [12] 离散傅里叶变换检测
-		p, q = randomness.DiscreteFourierTransformTest(bits)
+		p, q = randomness.DiscreteFourierTransformTestFast(bits)
 		PArr = append(PArr, p)
 		QArr = append(QArr, q)
 		log.Printf("[%s] 离散傅里叶变换检测 P: %.5f Q: %.5f", filename, p, q)

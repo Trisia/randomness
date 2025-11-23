@@ -42,5 +42,5 @@ var TestMethodArr = []TestItem{
 	{"近似熵检测", ApproximateEntropy},
 	{"线型复杂度检测", LinearComplexity},
 	{"通用统计检测", MaurerUniversal},
-	{"离散傅里叶检测", DiscreteFourierTransform},
+	{"离散傅里叶检测", DiscreteFourierTransformFast},
 }
