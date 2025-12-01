@@ -207,7 +207,7 @@ func worker_1E6(jobs <-chan string, out chan<- *R) {
 		log.Printf("[%s] Maurer通用统计检测 P: %.5f Q: %.5f", filename, p, q)
 
 		// [15] 离散傅里叶变换检测
-		p, q = randomness.DiscreteFourierTransformTestFast(bits)
+		p, q = randomness.DiscreteFourierTransformTest(bits)
 		PArr = append(PArr, p)
 		QArr = append(QArr, q)
 		log.Printf("[%s] 离散傅里叶变换检测 P: %.5f Q: %.5f", filename, p, q)
