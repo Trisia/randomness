@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -13,50 +12,70 @@ import (
 	"time"
 )
 
+// TestItem 检测项目结果
+type TestItem struct {
+	PValue   float64 `json:"P值"`
+	QValue   float64 `json:"Q值"`
+	TestName string  `json:"检测项目"`
+}
+
+// R 检测结果结构体
 type R struct {
-	Name string
-	P    []float64 // 样板通过率	  should >= 0.01
-	Q    []float64 // 样本分布均匀性 should >= 0.0001
+	Name      string     `json:"文件名"`
+	TestItems []TestItem `json:"检测项目结果"`
+}
+
+// AnalysisResult 分析报告结果
+type AnalysisResult struct {
+	TestName    string  `json:"检测项目"`
+	PassCount   int     `json:"通过数"`
+	TotalCount  int     `json:"检测数"`
+	PassRate    float64 `json:"通过率"`
+	Requirement float64 `json:"满足随机性要求"`
+	IsPassed    bool    `json:"是否通过"`
 }
 
 // 结果集写入文件工作器
-func resultWriter(in <-chan *R, w io.Writer, wg *sync.WaitGroup) {
+func resultWriter(in <-chan *R, collector *ReportCollector, wg *sync.WaitGroup) {
 	for r := range in {
-		_, _ = w.Write([]byte(r.Name))
-		for j := 0; j < len(r.P); j++ {
-			_, _ = w.Write([]byte(fmt.Sprintf(", %0.6f, %0.6f", r.P[j], r.Q[j])))
-		}
-		_, _ = w.Write([]byte("\n"))
+		collector.AddResult(r)
 		wg.Done()
 	}
-
 }
 
 // Version 软件版本号
 const Version = "1.5.1"
 
 var (
-	inputPath   string // 参数文件输入路径
-	reportPath  string // 生成的监测报告位置
-	NumWorkers  int    // 工作线程数
-	VersionFlag bool   // 版本号
+	inputPath     string  // 参数文件输入路径
+	reportPath    string  // 生成的监测报告位置
+	NumWorkers    int     // 工作线程数
+	VersionFlag   bool    // 版本号
+	analysisPath  string  // 分析报告路径
+	outputFormat  string  // 输出格式 (csv/json)
+	passThreshold float64 // 通过判定阈值
 )
 
 func init() {
 	flag.BoolVar(&VersionFlag, "v", false, "检测工具版本")
 	flag.StringVar(&inputPath, "i", "", "待检测随机数文件位置")
-	flag.StringVar(&reportPath, "o", "RandomnessTestReport.csv", "待检测随机数文件位置")
+	flag.StringVar(&reportPath, "o", "RandomnessTestReport.csv", "生成的检测报告位置")
+	flag.StringVar(&analysisPath, "a", "", "生成的分析报告位置（可选）")
+	flag.StringVar(&outputFormat, "f", "csv", "输出格式 (csv/json/xml)")
+	flag.Float64Var(&passThreshold, "t", 0.981, "通过判定阈值（默认98.1%）")
 	flag.IntVar(&NumWorkers, "n", runtime.NumCPU(), "工作线程数 (在大数据检测时通过该参数控制并行数量防止内存不足问题)")
 	flag.Usage = usage
 
 	log.SetPrefix("[rddetector] ")
 }
+
 func usage() {
 	_, _ = fmt.Fprintf(os.Stderr, `randomness 随机性检测 rddetector v%s 使用说明
 
-rddetector -i 待检测数据目录 [-o 生成报告位置]
+rddetector -i 待检测数据目录 [-o 生成报告位置] [-a 分析报告位置] [-f 输出格式] [-t 通过阈值]
 
-	示例: rddetector -i /data/target/ -o RandomnessTestReport.csv
+	示例: rddetector -i /data/target/ -o RandomnessTestReport.csv -a AnalysisReport.csv -f csv -t 0.981
+	示例: rddetector -i /data/target/ -o RandomnessTestReport.json -a AnalysisReport.json -f json
 
 	数据规模将由程序自动推断，支持单文件规模 [20 000 bit, 1 000 000 bit, 100 000 000 bit]
 
@@ -87,35 +106,26 @@ func main() {
 	wg.Add(s)
 
 	var worker func(jobs <-chan string, out chan<- *R) = nil
-	hdr := ""
 	switch sbit {
 	case 2e4:
-		hdr = Header_2E4
 		worker = worker_2E4
 	case 1e6:
-		hdr = Header_1E6
 		worker = worker_1E6
 	case 1e8:
-		hdr = Header_1E8
 		worker = worker_1E8
 	default:
 		_, _ = fmt.Fprintf(os.Stderr, "无法识别待检测数据规模 %d 程序退出, 支持单文件规模 [20 000, 1 000 000, 100 000 000]\n\n", sbit)
 		return
 	}
 
-	_ = os.MkdirAll(filepath.Dir(reportPath), os.FileMode(0600))
-	w, err := os.OpenFile(reportPath, os.O_RDWR|os.O_TRUNC|os.O_CREATE, os.FileMode(0600))
-	if err != nil {
-		_, _ = fmt.Fprintln(os.Stderr, "无法打开写入文件 "+reportPath)
-		return
-	}
-	defer w.Close()
-
-	_, _ = w.WriteString(hdr)
 	start := time.Now()
 
+	// 创建统一数据收集器
+	collector := NewReportCollector(outputFormat, reportPath, analysisPath, passThreshold)
+
 	// 启动数据写入消费者
-	go resultWriter(out, w, &wg)
+	go resultWriter(out, collector, &wg)
+
 	// 检测工作器
 	for i := 0; i < n; i++ {
 		go worker(jobs, out)
@@ -129,8 +139,20 @@ func main() {
 	})
 
 	wg.Wait()
+	close(out)
 
-	log.Printf("检测完成 耗时 %s 检测报告: %s\n", time.Since(start), reportPath)
+	// 生成所有报告
+	err := collector.GenerateReports()
+	if err != nil {
+		log.Fatalf("生成报告失败: %v\n", err)
+	}
+	log.Printf("检测完成 耗时 %s\n", time.Since(start))
+	if reportPath != "" {
+		log.Printf("检测报告: %s\n", reportPath)
+	}
+	if analysisPath != "" {
+		log.Printf("分析报告: %s\n", analysisPath)
+	}
 }
 
 // 获取待检测文件数量和规模
