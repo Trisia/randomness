@@ -1,0 +1,100 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-version: ['1.21']
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: ${{ matrix.go-version }}
+
+    - name: Build rddetector for multiple platforms
+      run: |
+        cd tools/rddetector
+        mkdir -p target
+        
+        # Windows amd64
+        GOOS=windows GOARCH=amd64 go build -ldflags "-s -w" -o target/rddetector.exe
+        echo "[+] Windows/amd64 rddetector.exe"
+        
+        # Linux amd64
+        GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o target/rddetector_linux_amd64
+        echo "[+] Linux/amd64 rddetector_linux_amd64"
+        
+        # Linux arm64
+        GOOS=linux GOARCH=arm64 go build -ldflags "-s -w" -o target/rddetector_linux_arm64
+        echo "[+] Linux/arm64 rddetector_linux_arm64"
+        
+        # macOS amd64
+        GOOS=darwin GOARCH=amd64 go build -ldflags "-s -w" -o target/rddetector_darwin_amd64
+        echo "[+] macOS/amd64 rddetector_darwin_amd64"
+        
+        # macOS arm64
+        GOOS=darwin GOARCH=arm64 go build -ldflags "-s -w" -o target/rddetector_darwin_arm64
+        echo "[+] macOS/arm64 rddetector_darwin_arm64"
+
+    - name: Build rdgen for multiple platforms
+      run: |
+        cd tools/rdgen
+        mkdir -p target
+        
+        # Windows amd64
+        GOOS=windows GOARCH=amd64 go build -ldflags "-s -w" -o target/rdgen.exe
+        echo "[+] Windows/amd64 rdgen.exe"
+        
+        # Linux amd64
+        GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o target/rdgen_linux_amd64
+        echo "[+] Linux/amd64 rdgen_linux_amd64"
+        
+        # Linux arm64
+        GOOS=linux GOARCH=arm64 go build -ldflags "-s -w" -o target/rdgen_linux_arm64
+        echo "[+] Linux/arm64 rdgen_linux_arm64"
+        
+        # macOS amd64
+        GOOS=darwin GOARCH=amd64 go build -ldflags "-s -w" -o target/rdgen_darwin_amd64
+        echo "[+] macOS/amd64 rdgen_darwin_amd64"
+        
+        # macOS arm64
+        GOOS=darwin GOARCH=arm64 go build -ldflags "-s -w" -o target/rdgen_darwin_arm64
+        echo "[+] macOS/arm64 rdgen_darwin_arm64"
+
+    - name: Create release archives
+      run: |
+        # Create rddetector archives
+        cd tools/rddetector/target
+        tar -czf rddetector_windows_amd64.tar.gz rddetector.exe
+        tar -czf rddetector_linux_amd64.tar.gz rddetector_linux_amd64
+        tar -czf rddetector_linux_arm64.tar.gz rddetector_linux_arm64
+        tar -czf rddetector_darwin_amd64.tar.gz rddetector_darwin_amd64
+        tar -czf rddetector_darwin_arm64.tar.gz rddetector_darwin_arm64
+        
+        # Create rdgen archives
+        cd ../../rdgen/target
+        tar -czf rdgen_windows_amd64.tar.gz rdgen.exe
+        tar -czf rdgen_linux_amd64.tar.gz rdgen_linux_amd64
+        tar -czf rdgen_linux_arm64.tar.gz rdgen_linux_arm64
+        tar -czf rdgen_darwin_amd64.tar.gz rdgen_darwin_amd64
+        tar -czf rdgen_darwin_arm64.tar.gz rdgen_darwin_arm64
+
+    - name: Upload release assets
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          tools/rddetector/target/*.tar.gz
+          tools/rdgen/target/*.tar.gz
+          tools/rddetector/README.md
+          tools/rdgen/README.md
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

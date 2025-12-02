@@ -33,7 +33,7 @@ func resultWriter(in <-chan *R, w io.Writer, wg *sync.WaitGroup) {
 }
 
 // Version 软件版本号
-const Version = "1.5.0"
+const Version = "1.5.1"
 
 var (
 	inputPath   string // 参数文件输入路径
