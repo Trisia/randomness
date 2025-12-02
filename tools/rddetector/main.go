@@ -44,7 +44,7 @@ func resultWriter(in <-chan *R, collector *ReportCollector, wg *sync.WaitGroup) 
 }
 
 // Version 软件版本号
-const Version = "1.5.1"
+const Version = "1.5.2"
 
 var (
 	inputPath     string  // 参数文件输入路径
