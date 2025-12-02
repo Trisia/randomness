@@ -82,21 +82,23 @@ jobs:
       run: |
         # Create rddetector archives
         cd tools/rddetector/target
-        tar -czf rddetector_windows_amd64.tar.gz rddetector.exe
-        tar -czf rddetector_linux_amd64.tar.gz rddetector_linux_amd64
-        tar -czf rddetector_linux_arm64.tar.gz rddetector_linux_arm64
-        tar -czf rddetector_linux_loong64.tar.gz rddetector_linux_loong64
-        tar -czf rddetector_darwin_amd64.tar.gz rddetector_darwin_amd64
-        tar -czf rddetector_darwin_arm64.tar.gz rddetector_darwin_arm64
+        cp ../README.md README.md
+        tar -czf rddetector_windows_amd64.tar.gz rddetector.exe README.md
+        tar -czf rddetector_linux_amd64.tar.gz rddetector_linux_amd64 README.md
+        tar -czf rddetector_linux_arm64.tar.gz rddetector_linux_arm64 README.md
+        tar -czf rddetector_linux_loong64.tar.gz rddetector_linux_loong64 README.md
+        tar -czf rddetector_darwin_amd64.tar.gz rddetector_darwin_amd64 README.md
+        tar -czf rddetector_darwin_arm64.tar.gz rddetector_darwin_arm64 README.md
         
         # Create rdgen archives
         cd ../../rdgen/target
-        tar -czf rdgen_windows_amd64.tar.gz rdgen.exe
-        tar -czf rdgen_linux_amd64.tar.gz rdgen_linux_amd64
-        tar -czf rdgen_linux_arm64.tar.gz rdgen_linux_arm64
-        tar -czf rdgen_linux_loong64.tar.gz rdgen_linux_loong64
-        tar -czf rdgen_darwin_amd64.tar.gz rdgen_darwin_amd64
-        tar -czf rdgen_darwin_arm64.tar.gz rdgen_darwin_arm64
+        cp ../README.md README.md
+        tar -czf rdgen_windows_amd64.tar.gz rdgen.exe README.md
+        tar -czf rdgen_linux_amd64.tar.gz rdgen_linux_amd64 README.md
+        tar -czf rdgen_linux_arm64.tar.gz rdgen_linux_arm64 README.md
+        tar -czf rdgen_linux_loong64.tar.gz rdgen_linux_loong64 README.md
+        tar -czf rdgen_darwin_amd64.tar.gz rdgen_darwin_amd64 README.md
+        tar -czf rdgen_darwin_arm64.tar.gz rdgen_darwin_arm64 README.md
 
     - name: Upload release assets
       uses: softprops/action-gh-release@v1
@@ -104,7 +106,5 @@ jobs:
         files: |
           tools/rddetector/target/*.tar.gz
           tools/rdgen/target/*.tar.gz
-          tools/rddetector/README.md
-          tools/rdgen/README.md
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
