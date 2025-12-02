@@ -37,6 +37,10 @@ jobs:
         GOOS=linux GOARCH=arm64 go build -ldflags "-s -w" -o target/rddetector_linux_arm64
         echo "[+] Linux/arm64 rddetector_linux_arm64"
         
+        # Linux loong64 (龙芯)
+        GOOS=linux GOARCH=loong64 go build -ldflags "-s -w" -o target/rddetector_linux_loong64
+        echo "[+] Linux/loong64 rddetector_linux_loong64"
+        
         # macOS amd64
         GOOS=darwin GOARCH=amd64 go build -ldflags "-s -w" -o target/rddetector_darwin_amd64
         echo "[+] macOS/amd64 rddetector_darwin_amd64"
@@ -62,6 +66,10 @@ jobs:
         GOOS=linux GOARCH=arm64 go build -ldflags "-s -w" -o target/rdgen_linux_arm64
         echo "[+] Linux/arm64 rdgen_linux_arm64"
         
+        # Linux loong64 (龙芯)
+        GOOS=linux GOARCH=loong64 go build -ldflags "-s -w" -o target/rdgen_linux_loong64
+        echo "[+] Linux/loong64 rdgen_linux_loong64"
+        
         # macOS amd64
         GOOS=darwin GOARCH=amd64 go build -ldflags "-s -w" -o target/rdgen_darwin_amd64
         echo "[+] macOS/amd64 rdgen_darwin_amd64"
@@ -77,6 +85,7 @@ jobs:
         tar -czf rddetector_windows_amd64.tar.gz rddetector.exe
         tar -czf rddetector_linux_amd64.tar.gz rddetector_linux_amd64
         tar -czf rddetector_linux_arm64.tar.gz rddetector_linux_arm64
+        tar -czf rddetector_linux_loong64.tar.gz rddetector_linux_loong64
         tar -czf rddetector_darwin_amd64.tar.gz rddetector_darwin_amd64
         tar -czf rddetector_darwin_arm64.tar.gz rddetector_darwin_arm64
         
@@ -85,6 +94,7 @@ jobs:
         tar -czf rdgen_windows_amd64.tar.gz rdgen.exe
         tar -czf rdgen_linux_amd64.tar.gz rdgen_linux_amd64
         tar -czf rdgen_linux_arm64.tar.gz rdgen_linux_arm64
+        tar -czf rdgen_linux_loong64.tar.gz rdgen_linux_loong64
         tar -czf rdgen_darwin_amd64.tar.gz rdgen_darwin_amd64
         tar -czf rdgen_darwin_arm64.tar.gz rdgen_darwin_arm64
 
