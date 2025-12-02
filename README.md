@@ -27,7 +27,7 @@
 - [12] 近似熵检测        [ApproximateEntropyTest](./approximate_entropy.go)
 - [13] 线型复杂度检测     [LinearComplexityTest](./linear_complexity.go)
 - [14] Maurer通用统计检测       [MaurerUniversalTest](./maurers_universal.go)
-- [15] 离散傅里叶检测     [DiscreteFourierTransformTestFast](./discrete_fourier_transform_fast.go)
+- [15] 离散傅里叶检测     [DiscreteFourierTransformTest](./discrete_fourier_transform.go)
 
 
 ### 检测工具
