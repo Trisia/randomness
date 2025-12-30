@@ -34,17 +34,17 @@ const (
 	LargeScale = 100000000
 )
 
-// 预置FFT表，初始化常见规模的FFT
-func init() {
-	// 预置常见规模的FFT表
-	scales := []int{SmallScale, MediumScale, LargeScale}
-	for _, scale := range scales {
-		n := ceilPow2(scale)
-		if f, err := fft.New(n); err == nil {
-			fftCache[n] = f
-		}
-	}
-}
+//// 预置FFT表，初始化常见规模的FFT
+//func init() {
+//	// 预置常见规模的FFT表
+//	scales := []int{SmallScale, MediumScale, LargeScale}
+//	for _, scale := range scales {
+//		n := ceilPow2(scale)
+//		if f, err := fft.New(n); err == nil {
+//			fftCache[n] = f
+//		}
+//	}
+//}
 
 // getFFT 获取FFT实例，优先使用缓存的预置表
 func getFFT(n int) (fft.FFT, error) {

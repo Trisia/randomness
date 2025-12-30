@@ -194,7 +194,12 @@ func roots(N int) []complex128 {
 // lastPow2 return the last power of 2 smaller or equal
 // to the given N, and it's base-2 logarithm.
 func lastPow2(N int) (n, p int, err error) {
+	// On 32-bit systems, complex128 arrays are limited in size due to address space constraints.
+	// complex128 is 16 bytes, so limit N to 2^25 on 32-bit (~512MB) to avoid allocation panic.
 	maxdim := 1 << 27
+	if ^uint(0)>>63 == 0 { // 32-bit system
+		maxdim = 1 << 25
+	}
 	if N < 2 {
 		return n, p, fmt.Errorf("fft input length must be >= 2")
 	} else if N > maxdim {
