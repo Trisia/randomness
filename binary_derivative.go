@@ -12,62 +12,87 @@ package randomness
 
 import (
 	"math"
+	"math/bits"
 )
+
+// coreBinaryDerivative 是二元推导检测的实现（packed 内核）。
+func coreBinaryDerivative(s BitSeq, k int) (float64, float64) {
+	n := s.n
+	if n < 7 {
+		panic("please provide valid test bits")
+	}
+	if k < 1 {
+		panic("please provide valid k (>= 1)")
+	}
+	w := make([]uint64, len(s.u))
+	copy(w, s.u)
+	for p := 0; p < k; p++ {
+		for j := range w {
+			sh := w[j] >> 1
+			if j+1 < len(w) {
+				sh |= w[j+1] << 63
+			}
+			w[j] ^= sh
+		}
+	}
+
+	// Step 3：只统计前 n-k 位
+	cnt := n - k
+	ones := 0
+	for j := 0; j*64 < cnt; j++ {
+		ones += bits.OnesCount64(w[j] & maskLow(cnt-j*64))
+	}
+	S := 2*ones - cnt
+
+	// Step 4, 计算 V
+	V := float64(S) / math.Sqrt(2*float64(cnt))
+	// Step 5, 6
+	return math.Erfc(math.Abs(V)), math.Erfc(V) / 2
+}
 
 // BinaryDerivative 二元推导检测， k=7
 func BinaryDerivative(data []byte) *TestResult {
-	p, q := BinaryDerivativeTestBytes(data, 7)
+	p, q := coreBinaryDerivative(BitSeqFromBytes(data), 7)
 	return &TestResult{Name: "二元推导检测(k=7)", P: p, Q: q, Pass: p >= Alpha}
 }
 
 // BinaryDerivativeTest 二元推导检测， k=7
+//
+// Deprecated: 请改用 BinaryDerivativeTestBitSeq——本函数接受 []bool（1 字节/位），并在内部再打包成 BitSeq，
+// 同一份数据被转换两次。推荐写法是转换一次后复用：
+// s := randomness.BitSeqFromBytes(buf)，之后调用 BinaryDerivativeTestBitSeq 系列。
+// 若手上已经是 []bool，可用 randomness.BitSeqFromBools 转换一次后同样复用。
 func BinaryDerivativeTest(bits []bool, k int) (float64, float64) {
-	return BinaryDerivativeProto(bits, k)
+	return coreBinaryDerivative(BitSeqFromBools(bits), k)
 }
 
 // BinaryDerivativeTestBytes 二元推导检测
 // bits: 待检测序列
 // k: 重复次数，k=3,7
 func BinaryDerivativeTestBytes(data []byte, k int) (float64, float64) {
-	return BinaryDerivativeProto(B2bitArr(data), k)
+	return coreBinaryDerivative(BitSeqFromBytes(data), k)
 }
 
 // BinaryDerivativeProto 二元推导检测
 // bits: 待检测序列
 // k: 重复次数，k=3,7
+//
+// Deprecated: 请改用 BinaryDerivativeTestBitSeq——本函数接受 []bool（1 字节/位），并在内部再打包成 BitSeq，
+// 同一份数据被转换两次。推荐写法是转换一次后复用：
+// s := randomness.BitSeqFromBytes(buf)，之后调用 BinaryDerivativeTestBitSeq 系列。
+// 若手上已经是 []bool，可用 randomness.BitSeqFromBools 转换一次后同样复用。
 func BinaryDerivativeProto(bits []bool, k int) (float64, float64) {
-	n := len(bits)
-	if n < 7 {
-		panic("please provide valid test bits")
-	}
+	return coreBinaryDerivative(BitSeqFromBools(bits), k)
+}
 
-	S := 0
-	var V float64 = 0
-	_bits := make([]bool, len(bits))
-	copy(_bits, bits)
+// BinaryDerivativeBitSeq 二元推导检测，k=7
+func BinaryDerivativeBitSeq(s BitSeq) *TestResult {
+	p, q := coreBinaryDerivative(s, 7)
+	return &TestResult{Name: "二元推导检测(k=7)", P: p, Q: q, Pass: p >= Alpha}
+}
 
-	// Step 1, 2
-	for i := 0; i < k; i++ {
-		for j := 0; j < n-i-1; j++ {
-			_bits[j] = xor(_bits[j], _bits[j+1])
-		}
-	}
-
-	// Step 3
-	for i := 0; i < n-k; i++ {
-		if _bits[i] {
-			S++
-		} else {
-			S--
-		}
-	}
-	// Step 4, 提前对V除以2的平方根，避免求P Q时再求解
-	V = float64(S) / math.Sqrt(2*float64(n-k))
-
-	// Step 5
-	P := math.Erfc(math.Abs(V))
-
-	// Step 6
-	Q := math.Erfc(V) / 2
-	return P, Q
+// BinaryDerivativeTestBitSeq 二元推导检测
+// k: 重复次数，k=3,7
+func BinaryDerivativeTestBitSeq(s BitSeq, k int) (float64, float64) {
+	return coreBinaryDerivative(s, k)
 }

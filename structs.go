@@ -44,3 +44,32 @@ var TestMethodArr = []TestItem{
 	{"通用统计检测", MaurerUniversal},
 	{"离散傅里叶检测", DiscreteFourierTransform},
 }
+
+// TestFuncSeq 基于 BitSeq 的测试方法。
+type TestFuncSeq func(BitSeq) *TestResult
+
+// TestSeqItem 测试项目（BitSeq 形态）
+type TestSeqItem struct {
+	Name string // 检测名称
+	// 检测方法
+	Runner TestFuncSeq
+}
+
+// TestMethodSeqArr 测试方法序列（BitSeq 形态）
+var TestMethodSeqArr = []TestSeqItem{
+	{"单比特频数检测", MonoBitFrequencyBitSeq},
+	{"块内频数检测", FrequencyWithinBlockBitSeq},
+	{"扑克检测", PokerBitSeq},
+	{"重叠子序列检测", OverlappingTemplateMatchingBitSeq},
+	{"游程总数检测", RunsBitSeq},
+	{"游程分布检测", RunsDistributionBitSeq},
+	{"块内最大“1”游程检测", LongestRunOfOnesInABlockBitSeq},
+	{"二元推导检测", BinaryDerivativeBitSeq},
+	{"自相关检测", AutocorrelationBitSeq},
+	{"矩阵秩检测", MatrixRankBitSeq},
+	{"累加和检测", CumulativeBitSeq},
+	{"近似熵检测", ApproximateEntropyBitSeq},
+	{"线型复杂度检测", LinearComplexityBitSeq},
+	{"通用统计检测", MaurerUniversalBitSeq},
+	{"离散傅里叶检测", DiscreteFourierTransformBitSeq},
+}

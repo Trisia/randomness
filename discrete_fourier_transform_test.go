@@ -77,7 +77,8 @@ func BenchmarkDiscreteFourierTransformOriginal(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, _ = discreteFourierTransformTest(bits)
+		// 库内的旧实现已合并为唯一实现，这里用测试文件自带的参照实现做对比基准
+		_, _ = discreteFourierTransformTestOriginal(bits)
 	}
 }
 

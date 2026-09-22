@@ -76,10 +76,9 @@ For more information, please refer to <http://unlicense.org>
 // permutated by the bit-inverted order.
 
 type FFT struct {
-	N    int          // Fft length, power of 2.
-	p    int          // Base-2 exponent: 2^p = N.
-	E    []complex128 // Precomputed roots table, length N.
-	perm []int        // Index permutation vector for the input array.
+	N int          // Fft length, power of 2.
+	p int          // Base-2 exponent: 2^p = N.
+	E []complex128 // Precomputed roots table, length N.
 }
 
 func New(N int) (f FFT, err error) {
@@ -89,29 +88,23 @@ func New(N int) (f FFT, err error) {
 		return f, err
 	}
 	f = FFT{
-		N:    N,
-		p:    p,
-		E:    roots(N),
-		perm: permutationIndex(p),
+		N: N,
+		p: p,
+		E: roots(N),
 	}
 	return f, nil
 }
 
-// Transform Forward transform.
-// The forward transform overwrites the input array.
+// Transform 进行前向傅里叶变换，结果直接覆盖输入数组。
 func (f FFT) Transform(x []complex128) []complex128 {
 	if len(x) != f.N {
 		panic("Input dimension mismatches: FFT is not initialized, or called with wrong input.")
 	}
 
-	inputPermutation(x, f.perm)
+	bitReversePermute(x)
 
-	butterfly := func(k, o, l, s int) {
-		i := k + o
-		j := i + l
-		x[i], x[j] = x[i]+f.E[k*s]*x[j], x[i]+f.E[s*(k+l)]*x[j]
-	}
-
+	// 蝶形运算：x[i] = x[i] + E[k*s] * x[j]; x[j] = x[i] - E[k*s] * x[j]。
+	// 注意必须先取出旧的 x[i]。
 	n := 1
 	s := f.N
 	for p := 1; p <= f.p; p++ {
@@ -119,7 +112,12 @@ func (f FFT) Transform(x []complex128) []complex128 {
 		for b := 0; b < s; b++ {
 			o := 2 * b * n
 			for k := 0; k < n; k++ {
-				butterfly(k, o, n, s)
+				i := k + o
+				j := i + n
+				u := x[i]
+				t := f.E[k*s] * x[j]
+				x[i] = u + t
+				x[j] = u - t
 			}
 		}
 		n <<= 1
@@ -149,33 +147,17 @@ func (f FFT) Inverse(x []complex128) []complex128 {
 	return x
 }
 
-// permutationIndex builds the bit-inverted index vector,
-// which is needed to permutate the input data.
-func permutationIndex(P int) []int {
-	N := 1 << uint(P)
-	index := make([]int, N)
-	index[0] = 0 // Initial sequence for N=1
-	n := 1
-	// For every next power of two, the
-	// sequence is multiplied by 2 inplace.
-	// Then the result is also appended to the
-	// end and increased by one.
-	for p := 0; p < P; p++ {
-		for i := 0; i < n; i++ {
-			index[i] <<= 1
-			index[i+n] = index[i] + 1
+// bitReversePermute 按位反转顺序原地重排输入。
+func bitReversePermute(x []complex128) {
+	n := len(x)
+	for i, j := 1, 0; i < n; i++ {
+		bit := n >> 1
+		for ; j&bit != 0; bit >>= 1 {
+			j ^= bit
 		}
-		n <<= 1
-	}
-	return index
-}
-
-// inputPermutation permutes the input vector in the order
-// needed for the transformation.
-func inputPermutation(x []complex128, p []int) {
-	for i := range p {
-		if k := p[i]; i < k {
-			x[i], x[k] = x[k], x[i]
+		j ^= bit
+		if i < j {
+			x[i], x[j] = x[j], x[i]
 		}
 	}
 }

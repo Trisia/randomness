@@ -14,9 +14,74 @@ import (
 	"math"
 )
 
+// coreOverlapping 是重叠子序列检测的实现（packed 内核）。
+func coreOverlapping(s BitSeq, m int) (p1 float64, p2 float64, q1 float64, q2 float64) {
+	n := s.n
+	if n < 5 {
+		panic("please provide valid test bits")
+	}
+	if m < 2 || m > 30 {
+		panic("please provide valid m (2..30)")
+	}
+	size1 := 1 << uint(m)
+	mask1 := size1 - 1
+	patterns1 := make([]int, size1)
+
+	// Step 2：本来这里需要预先在结尾插入 bits[:m-1] 使长度仍为 n；
+	// 现在改成主体 + 尾循环两段，避免逐位取模。
+	tmp := 0
+	for j := 0; j < m-1; j++ {
+		tmp = (tmp << 1) | int(s.bit(j))
+	}
+	for i := m - 1; i < n; i++ {
+		tmp = ((tmp << 1) | int(s.bit(i))) & mask1
+		patterns1[tmp]++
+	}
+	for j := 0; j < m-1; j++ {
+		tmp = ((tmp << 1) | int(s.bit(j))) & mask1
+		patterns1[tmp]++
+	}
+
+	// patterns2/patterns3 由 patterns1 的边缘和导出
+	size2 := size1 >> 1
+	patterns2 := make([]int, size2)
+	for x := 0; x < size2; x++ {
+		patterns2[x] = patterns1[x] + patterns1[x+size2]
+	}
+	size3 := size1 >> 2
+	patterns3 := make([]int, size3)
+	for x := 0; x < size3; x++ {
+		patterns3[x] = patterns2[x] + patterns2[x+size3]
+	}
+
+	// Step 3
+	fn := float64(n)
+	phi := func(pat []int, size int) float64 {
+		acc := 0.0
+		for i := 0; i < size; i++ {
+			acc += float64(pat[i]) * float64(pat[i])
+		}
+		return acc*float64(size)/fn - fn
+	}
+	phi1 := phi(patterns1, size1)
+	phi2 := phi(patterns2, size2)
+	phi3 := phi(patterns3, size3)
+
+	// Step 4
+	DPhi2 := phi1 - phi2
+	D2Phi2 := phi1 - 2*phi2 + phi3
+
+	// Step 5, 6
+	p1 = igamc(float64(size3), DPhi2/2.0)
+	p2 = igamc(float64(size3)/2.0, D2Phi2/2.0)
+	q1 = p1
+	q2 = p2
+	return
+}
+
 // OverlappingTemplateMatching 重叠子序列检测方法,m=5
 func OverlappingTemplateMatching(data []byte) *TestResult {
-	p1, p2, q1, q2 := OverlappingTemplateMatchingTestBytes(data, 5)
+	p1, p2, q1, q2 := coreOverlapping(BitSeqFromBytes(data), 5)
 	return &TestResult{
 		Name: "重叠子序列检测方法",
 		P:    p1, P2: p2,
@@ -31,8 +96,13 @@ func OverlappingTemplateMatching(data []byte) *TestResult {
 //
 //	p1: P-value1
 //	p2: P-value2
+//
+// Deprecated: 请改用 OverlappingTemplateMatchingTestBitSeq——本函数接受 []bool（1 字节/位），并在内部再打包成 BitSeq，
+// 同一份数据被转换两次。推荐写法是转换一次后复用：
+// s := randomness.BitSeqFromBytes(buf)，之后调用 OverlappingTemplateMatchingTestBitSeq 系列。
+// 若手上已经是 []bool，可用 randomness.BitSeqFromBools 转换一次后同样复用。
 func OverlappingTemplateMatchingTest(bits []bool) (p1 float64, p2 float64, q1 float64, q2 float64) {
-	return OverlappingTemplateMatchingProto(bits, 5)
+	return coreOverlapping(BitSeqFromBools(bits), 5)
 }
 
 // OverlappingTemplateMatchingTestBytes 重叠子序列检测方法
@@ -43,7 +113,7 @@ func OverlappingTemplateMatchingTest(bits []bool) (p1 float64, p2 float64, q1 fl
 //	p1: P-value1
 //	p2: P-value2
 func OverlappingTemplateMatchingTestBytes(data []byte, m int) (p1 float64, p2 float64, q1 float64, q2 float64) {
-	return OverlappingTemplateMatchingProto(B2bitArr(data), m)
+	return coreOverlapping(BitSeqFromBytes(data), m)
 }
 
 // OverlappingTemplateMatchingProto 重叠子序列检测方法
@@ -53,68 +123,32 @@ func OverlappingTemplateMatchingTestBytes(data []byte, m int) (p1 float64, p2 fl
 //
 //	p1: P-value1
 //	p2: P-value2
+//
+// Deprecated: 请改用 OverlappingTemplateMatchingTestBitSeq——本函数接受 []bool（1 字节/位），并在内部再打包成 BitSeq，
+// 同一份数据被转换两次。推荐写法是转换一次后复用：
+// s := randomness.BitSeqFromBytes(buf)，之后调用 OverlappingTemplateMatchingTestBitSeq 系列。
+// 若手上已经是 []bool，可用 randomness.BitSeqFromBools 转换一次后同样复用。
 func OverlappingTemplateMatchingProto(bits []bool, m int) (p1 float64, p2 float64, q1 float64, q2 float64) {
-	n := len(bits)
-	if n < 5 {
-		panic("please provide valid test bits")
+	return coreOverlapping(BitSeqFromBools(bits), m)
+}
+
+// OverlappingTemplateMatchingBitSeq 重叠子序列检测方法,m=5
+func OverlappingTemplateMatchingBitSeq(s BitSeq) *TestResult {
+	p1, p2, q1, q2 := coreOverlapping(s, 5)
+	return &TestResult{
+		Name: "重叠子序列检测方法",
+		P:    p1, P2: p2,
+		Q: q1, Q2: q2,
+		Pass: math.Min(p1, p2) >= Alpha,
 	}
-	patterns1 := make([]int, 1<<uint(m))
-	patterns2 := make([]int, 1<<uint(m-1))
-	patterns3 := make([]int, 1<<uint(m-2))
-	var Phi1, Phi2, Phi3 float64 = 0, 0, 0
-	var DPhi2, D2Phi2 float64 = 0, 0
+}
 
-	var mask1 int = (1 << uint(m)) - 1
-	var mask2 int = (1 << uint(m-1)) - 1
-	var mask3 int = (1 << uint(m-2)) - 1
-
-	// 本来这里需要取bits后面预先插入bits[:m-1]，使得bits[m-1:]的长度依然是n。
-	// 现在改成不对bits切片做预处理，而是取位时对索引进行模操作。
-	//
-	// Step 2
-	tmp := subsequencepattern(bits, m-1)
-
-	for i := m - 1; i < n+m-1; i++ {
-		tmp <<= 1
-		if bits[i%n] { // i % n is used to avoid appending m-1 bits in the end
-			tmp++
-		}
-		patterns1[tmp&mask1]++
-		patterns2[tmp&mask2]++
-		patterns3[tmp&mask3]++
-	}
-
-	// Step 3
-	for i := 0; i <= mask1; i++ {
-		Phi1 += float64(patterns1[i]) * float64(patterns1[i])
-	}
-	Phi1 *= float64(mask1 + 1)
-	Phi1 /= float64(n)
-	Phi1 -= float64(n)
-	for i := 0; i <= mask2; i++ {
-		Phi2 += float64(patterns2[i]) * float64(patterns2[i])
-	}
-	Phi2 *= float64(mask2 + 1)
-	Phi2 /= float64(n)
-	Phi2 -= float64(n)
-	for i := 0; i <= mask3; i++ {
-		Phi3 += float64(patterns3[i]) * float64(patterns3[i])
-	}
-	Phi3 *= float64(mask3 + 1)
-	Phi3 /= float64(n)
-	Phi3 -= float64(n)
-
-	// Step 4
-	DPhi2 = Phi1 - Phi2
-	D2Phi2 = Phi1 - 2*Phi2 + Phi3
-
-	// Step 5
-	p1 = igamc(float64(len(patterns3)), DPhi2/2.0)
-	p2 = igamc(float64(len(patterns3))/2.0, D2Phi2/2.0)
-
-	// Step 6
-	q1 = p1
-	q2 = p2
-
-	return
+// OverlappingTemplateMatchingTestBitSeq 重叠子序列检测方法
+// m: m长度,m=2,3,5,7
+// return:
+//
+//	p1: P-value1
+//	p2: P-value2
+func OverlappingTemplateMatchingTestBitSeq(s BitSeq, m int) (p1 float64, p2 float64, q1 float64, q2 float64) {
+	return coreOverlapping(s, m)
 }

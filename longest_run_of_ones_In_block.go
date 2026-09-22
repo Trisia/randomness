@@ -10,6 +10,10 @@
 
 package randomness
 
+import (
+	"math/bits"
+)
+
 var parameters = []struct {
 	pi     []float64
 	k      int
@@ -47,63 +51,91 @@ func selectParameters(n int) int {
 	}
 }
 
-// LongestRunOfOnesInABlock 块内最大游程检测,m=10000, k=6 for bits = 1000_000
-func LongestRunOfOnesInABlock(data []byte) *TestResult {
-	p, q := LongestRunOfOnesInABlockTestBytes(data, true)
-	return &TestResult{Name: "块内最大游程检测", P: p, Q: q, Pass: p >= Alpha}
+// longestRunOnesWord 返回一个字内最长连续 1 的长度。
+func longestRunOnesWord(w uint64) int {
+	c := 0
+	for w != 0 {
+		w &= w << 1
+		c++
+	}
+	return c
 }
 
-// LongestRunOfOnesInABlockTest 块内最大游程检测,m=10000 for bits = 1000_000
-func LongestRunOfOnesInABlockTest(bits []bool, checkOne bool) (float64, float64) {
-	return LongestRunOfOnesInABlockProto(bits, checkOne)
+// trailingOnes 返回从 bit 0 起连续 1 的个数（即可能从前一字续接过来的游程长度）。
+func trailingOnes(w uint64) int { return bits.TrailingZeros64(^w) }
+
+// leadingOnes 返回以 bit lim-1 结尾、向下连续的 1 的个数。
+func leadingOnes(w uint64, lim int) int {
+	c := 0
+	for b := lim - 1; b >= 0; b-- {
+		if (w>>uint(b))&1 == 0 {
+			break
+		}
+		c++
+	}
+	return c
 }
 
-// LongestRunOfOnesInABlockTestBytes 块内最大游程检测
-func LongestRunOfOnesInABlockTestBytes(data []byte, checkOne bool) (float64, float64) {
-	return LongestRunOfOnesInABlockProto(B2bitArr(data), checkOne)
+// longestRunBlock 返回 words 所表示序列（前 nbits 位）中的最长 1 游程
+// （checkOne=false 时为最长 0 游程）。
+func longestRunBlock(w []uint64, nbits int, checkOne bool) int {
+	best, cur := 0, 0
+	for i := 0; i < len(w); i++ {
+		lim := nbits - i*64
+		if lim <= 0 {
+			break
+		}
+		if lim > 64 {
+			lim = 64
+		}
+		mask := maskLow(lim)
+		word := w[i] & mask
+		if !checkOne {
+			word = ^w[i] & mask
+		}
+
+		// 字内最长游程（不含跨字续接）
+		if r := longestRunOnesWord(word); r > best {
+			best = r
+		}
+		// 与上一字续接
+		if word&1 == 1 && cur > 0 {
+			if r := cur + trailingOnes(word); r > best {
+				best = r
+			}
+		}
+		// 更新「以本字最高有效位结尾的游程长度」，供下一字续接
+		if word == mask {
+			cur += lim
+		} else if (word>>uint(lim-1))&1 == 1 {
+			cur = leadingOnes(word, lim)
+		} else {
+			cur = 0
+		}
+		if cur > best {
+			best = cur
+		}
+	}
+	return best
 }
 
-// LongestRunOfOnesInABlockProto 块内最大游程检测
-// bits: 待检测序列
-// m: m长度， m = 10000, k=6 for bits = 1000_000
-func LongestRunOfOnesInABlockProto(bits []bool, checkOne bool) (float64, float64) {
-	n := len(bits)
-
+// coreLongestRunOfOnesInABlock 是块内最大游程检测的实现（packed 内核）。
+func coreLongestRunOfOnesInABlock(s BitSeq, checkOne bool) (float64, float64) {
+	n := s.n
 	if n < 128 {
 		panic("please provide valid test bits")
 	}
-
 	param := parameters[selectParameters(n)]
 
 	// Step 1
 	N := n / param.m
 
 	// Step 2
+	blockWords := make([]uint64, (param.m+63)/64)
 	v := make([]float64, param.k+1)
-	var lr1, mlr1 int
-	var b bool
 	for i := 0; i < N; i++ {
-		lr1 = 0
-		mlr1 = 0
-
-		for j := 0; j < param.m; j++ {
-			b, bits = bits[0], bits[1:]
-			if checkOne {
-				if b {
-					lr1++
-					mlr1 = max(mlr1, lr1)
-				} else {
-					lr1 = 0
-				}
-			} else {
-				if b {
-					lr1 = 0
-				} else {
-					lr1++
-					mlr1 = max(mlr1, lr1)
-				}
-			}
-		}
+		extractBits(s, i*param.m, param.m, blockWords)
+		mlr1 := longestRunBlock(blockWords, param.m, checkOne)
 		if mlr1 < param.startV {
 			mlr1 = param.startV
 		} else if mlr1 > param.startV+param.k {
@@ -114,11 +146,56 @@ func LongestRunOfOnesInABlockProto(bits []bool, checkOne bool) (float64, float64
 
 	// Step 3
 	var V float64 = 0
+	NF := float64(N)
 	for i := 0; i < param.k+1; i++ {
-		V += (v[i] - float64(N)*param.pi[i]) * (v[i] - float64(N)*param.pi[i]) / (float64(N) * param.pi[i])
+		V += (v[i] - NF*param.pi[i]) * (v[i] - NF*param.pi[i]) / (NF * param.pi[i])
 	}
-
 	// Step 4
 	P := igamc(float64(param.k)/2.0, V/2.0)
 	return P, P
+}
+
+// LongestRunOfOnesInABlock 块内最大游程检测,m=10000, k=6 for bits = 1000_000
+func LongestRunOfOnesInABlock(data []byte) *TestResult {
+	p, q := coreLongestRunOfOnesInABlock(BitSeqFromBytes(data), true)
+	return &TestResult{Name: "块内最大游程检测", P: p, Q: q, Pass: p >= Alpha}
+}
+
+// LongestRunOfOnesInABlockTest 块内最大游程检测,m=10000 for bits = 1000_000
+//
+// Deprecated: 请改用 LongestRunOfOnesInABlockTestBitSeq——本函数接受 []bool（1 字节/位），并在内部再打包成 BitSeq，
+// 同一份数据被转换两次。推荐写法是转换一次后复用：
+// s := randomness.BitSeqFromBytes(buf)，之后调用 LongestRunOfOnesInABlockTestBitSeq 系列。
+// 若手上已经是 []bool，可用 randomness.BitSeqFromBools 转换一次后同样复用。
+func LongestRunOfOnesInABlockTest(bits []bool, checkOne bool) (float64, float64) {
+	return coreLongestRunOfOnesInABlock(BitSeqFromBools(bits), checkOne)
+}
+
+// LongestRunOfOnesInABlockTestBytes 块内最大游程检测
+func LongestRunOfOnesInABlockTestBytes(data []byte, checkOne bool) (float64, float64) {
+	return coreLongestRunOfOnesInABlock(BitSeqFromBytes(data), checkOne)
+}
+
+// LongestRunOfOnesInABlockProto 块内最大游程检测
+// bits: 待检测序列
+// m: m长度， m = 10000, k=6 for bits = 1000_000
+//
+// Deprecated: 请改用 LongestRunOfOnesInABlockTestBitSeq——本函数接受 []bool（1 字节/位），并在内部再打包成 BitSeq，
+// 同一份数据被转换两次。推荐写法是转换一次后复用：
+// s := randomness.BitSeqFromBytes(buf)，之后调用 LongestRunOfOnesInABlockTestBitSeq 系列。
+// 若手上已经是 []bool，可用 randomness.BitSeqFromBools 转换一次后同样复用。
+func LongestRunOfOnesInABlockProto(bits []bool, checkOne bool) (float64, float64) {
+	return coreLongestRunOfOnesInABlock(BitSeqFromBools(bits), checkOne)
+}
+
+// LongestRunOfOnesInABlockBitSeq 块内最大游程检测（块长按数据规模自动选择）
+func LongestRunOfOnesInABlockBitSeq(s BitSeq) *TestResult {
+	p, q := coreLongestRunOfOnesInABlock(s, true)
+	return &TestResult{Name: "块内最大游程检测", P: p, Q: q, Pass: p >= Alpha}
+}
+
+// LongestRunOfOnesInABlockTestBitSeq 块内最大游程检测
+// checkOne: true 统计最长 1 游程，false 统计最长 0 游程
+func LongestRunOfOnesInABlockTestBitSeq(s BitSeq, checkOne bool) (float64, float64) {
+	return coreLongestRunOfOnesInABlock(s, checkOne)
 }

@@ -8,11 +8,17 @@ import (
 	"github.com/Trisia/randomness"
 )
 
-// 数据规模为 1 000 000 个比特的随机数列检测工作器
+// worker_1E6 检测数据规模为 1 000 000 bit 的随机数列。
 func worker_1E6(jobs <-chan string, out chan<- *R) {
 	for filename := range jobs {
-		buf, _ := ioutil.ReadFile(filename)
-		bits := randomness.B2bitArr(buf)
+		buf, err := ioutil.ReadFile(filename)
+		if err != nil {
+			log.Printf("[%s] 读取失败，跳过: %v", filename, err)
+			out <- &R{Name: filename}
+			continue
+		}
+		// 只在这里做一次 []byte -> BitSeq 转换，后续所有检测复用同一个 BitSeq。
+		bits := randomness.BitSeqFromBytes(buf)
 
 		testItems := make([]TestItem, 0, 64)
 
@@ -24,7 +30,7 @@ func worker_1E6(jobs <-chan string, out chan<- *R) {
 		log.Printf("[%s] 单比特频数检测 P: %.5f Q: %.5f", filename, p, q)
 
 		// [2] 块内频数检测
-		p, q = randomness.FrequencyWithinBlockProto(bits, 10000)
+		p, q = randomness.FrequencyWithinBlockTestBitSeq(bits, 10000)
 		testItems = append(testItems, TestItem{PValue: p, QValue: q, TestName: "块内频数检测 m=10000"})
 		log.Printf("[%s] 块内频数检测 m=10000 P: %.5f Q: %.5f", filename, p, q)
 
@@ -40,88 +46,88 @@ func worker_1E6(jobs <-chan string, out chan<- *R) {
 		buf = nil
 
 		// [4] 重叠子序列检测
-		p1, p2, q1, q2 := randomness.OverlappingTemplateMatchingProto(bits, 3)
+		p1, p2, q1, q2 := randomness.OverlappingTemplateMatchingTestBitSeq(bits, 3)
 		testItems = append(testItems, TestItem{PValue: p1, QValue: q1, TestName: "重叠子序列检测 m=3 P1"})
 		testItems = append(testItems, TestItem{PValue: p2, QValue: q2, TestName: "重叠子序列检测 m=3 P2"})
 		log.Printf("[%s] 重叠子序列检测 m=3 P1: %.5f P2: %.5f Q1: %.5f Q2: %.5f", filename, p1, p2, q1, q2)
-		p1, p2, q1, q2 = randomness.OverlappingTemplateMatchingProto(bits, 5)
+		p1, p2, q1, q2 = randomness.OverlappingTemplateMatchingTestBitSeq(bits, 5)
 		testItems = append(testItems, TestItem{PValue: p1, QValue: q1, TestName: "重叠子序列检测 m=5 P1"})
 		testItems = append(testItems, TestItem{PValue: p2, QValue: q2, TestName: "重叠子序列检测 m=5 P2"})
 		log.Printf("[%s] 重叠子序列检测 m=5 P1: %.5f P2: %.5f Q1: %.5f Q2: %.5f", filename, p1, p2, q1, q2)
 
 		// [5] 游程总数检测
-		p, q = randomness.RunsTest(bits)
+		p, q = randomness.RunsTestBitSeq(bits)
 		testItems = append(testItems, TestItem{PValue: p, QValue: q, TestName: "游程总数检测"})
 		log.Printf("[%s] 游程总数检测 P: %.5f Q: %.5f", filename, p, q)
 
 		// [6] 游程分布检测
-		p, q = randomness.RunsDistributionTest(bits)
+		p, q = randomness.RunsDistributionTestBitSeq(bits)
 		testItems = append(testItems, TestItem{PValue: p, QValue: q, TestName: "游程分布检测"})
 		log.Printf("[%s] 游程分布检测 P: %.5f Q: %.5f", filename, p, q)
 
 		// [7] 块内最大游程检测
-		p, q = randomness.LongestRunOfOnesInABlockTest(bits, true)
+		p, q = randomness.LongestRunOfOnesInABlockTestBitSeq(bits, true)
 		testItems = append(testItems, TestItem{PValue: p, QValue: q, TestName: "块内最大\"1\"游程检测 m=10000"})
 		log.Printf("[%s] 块内最大\"1\"游程检测 P: %.5f Q: %.5f", filename, p, q)
-		p, q = randomness.LongestRunOfOnesInABlockTest(bits, false)
+		p, q = randomness.LongestRunOfOnesInABlockTestBitSeq(bits, false)
 		testItems = append(testItems, TestItem{PValue: p, QValue: q, TestName: "块内最大\"0\"游程检测 m=10000"})
 		log.Printf("[%s] 块内最大\"0\"游程检测 P: %.5f Q: %.5f", filename, p, q)
 
 		// [8] 二元推导检测
-		p, q = randomness.BinaryDerivativeProto(bits, 3)
+		p, q = randomness.BinaryDerivativeTestBitSeq(bits, 3)
 		testItems = append(testItems, TestItem{PValue: p, QValue: q, TestName: "二元推导检测 k=3"})
 		log.Printf("[%s] 二元推导检测 k=3 P: %.5f Q: %.5f", filename, p, q)
-		p, q = randomness.BinaryDerivativeProto(bits, 7)
+		p, q = randomness.BinaryDerivativeTestBitSeq(bits, 7)
 		testItems = append(testItems, TestItem{PValue: p, QValue: q, TestName: "二元推导检测 k=7"})
 		log.Printf("[%s] 二元推导检测 k=7 P: %.5f Q: %.5f", filename, p, q)
 
 		// [9] 自相关检测
-		p, q = randomness.AutocorrelationProto(bits, 1)
+		p, q = randomness.AutocorrelationTestBitSeq(bits, 1)
 		testItems = append(testItems, TestItem{PValue: p, QValue: q, TestName: "自相关检测 d=1"})
 		log.Printf("[%s] 自相关检测 d=1 P: %.5f Q: %.5f", filename, p, q)
-		p, q = randomness.AutocorrelationProto(bits, 2)
+		p, q = randomness.AutocorrelationTestBitSeq(bits, 2)
 		testItems = append(testItems, TestItem{PValue: p, QValue: q, TestName: "自相关检测 d=2"})
 		log.Printf("[%s] 自相关检测 d=2 P: %.5f Q: %.5f", filename, p, q)
-		p, q = randomness.AutocorrelationProto(bits, 8)
+		p, q = randomness.AutocorrelationTestBitSeq(bits, 8)
 		testItems = append(testItems, TestItem{PValue: p, QValue: q, TestName: "自相关检测 d=8"})
 		log.Printf("[%s] 自相关检测 d=8 P: %.5f Q: %.5f", filename, p, q)
-		p, q = randomness.AutocorrelationProto(bits, 16)
+		p, q = randomness.AutocorrelationTestBitSeq(bits, 16)
 		testItems = append(testItems, TestItem{PValue: p, QValue: q, TestName: "自相关检测 d=16"})
 		log.Printf("[%s] 自相关检测 d=16 P: %.5f Q: %.5f", filename, p, q)
 
 		// [10] 矩阵秩检测
-		p, q = randomness.MatrixRankTest(bits)
+		p, q = randomness.MatrixRankTestBitSeq(bits, 32, 32)
 		testItems = append(testItems, TestItem{PValue: p, QValue: q, TestName: "矩阵秩检测"})
 		log.Printf("[%s] 矩阵秩检测 P: %.5f Q: %.5f", filename, p, q)
 
 		// [11] 累加和检测
-		p, q = randomness.CumulativeTest(bits, true)
+		p, q = randomness.CumulativeTestBitSeq(bits, true)
 		testItems = append(testItems, TestItem{PValue: p, QValue: q, TestName: "累加和检测 前向"})
 		log.Printf("[%s] 累加和检测 前向 P: %.5f Q: %.5f", filename, p, q)
-		p, q = randomness.CumulativeTest(bits, false)
+		p, q = randomness.CumulativeTestBitSeq(bits, false)
 		testItems = append(testItems, TestItem{PValue: p, QValue: q, TestName: "累加和检测 后向"})
 		log.Printf("[%s] 累加和检测 后向 P: %.5f Q: %.5f", filename, p, q)
 
 		// [12] 近似熵检测
-		p, q = randomness.ApproximateEntropyProto(bits, 2)
+		p, q = randomness.ApproximateEntropyTestBitSeq(bits, 2)
 		testItems = append(testItems, TestItem{PValue: p, QValue: q, TestName: "近似熵检测 m=2"})
 		log.Printf("[%s] 近似熵检测 m=2 P: %.5f Q: %.5f", filename, p, q)
-		p, q = randomness.ApproximateEntropyProto(bits, 5)
+		p, q = randomness.ApproximateEntropyTestBitSeq(bits, 5)
 		testItems = append(testItems, TestItem{PValue: p, QValue: q, TestName: "近似熵检测 m=5"})
 		log.Printf("[%s] 近似熵检测 m=5 P: %.5f Q: %.5f", filename, p, q)
 
 		// [13] 线性复杂度检测
-		p, q = randomness.LinearComplexityTest(bits)
+		p, q = randomness.LinearComplexityTestBitSeq(bits, 500)
 		testItems = append(testItems, TestItem{PValue: p, QValue: q, TestName: "线性复杂度检测 m=500"})
 		log.Printf("[%s] 线性复杂度检测 m=500 P: %.5f Q: %.5f", filename, p, q)
 
 		// [14] Maurer通用统计检测
-		p, q = randomness.MaurerUniversalTest(bits)
+		p, q = randomness.MaurerUniversalTestBitSeq(bits)
 		testItems = append(testItems, TestItem{PValue: p, QValue: q, TestName: "Maurer通用统计检测 L=7 Q=1280"})
 		log.Printf("[%s] Maurer通用统计检测 P: %.5f Q: %.5f", filename, p, q)
 
 		// [15] 离散傅里叶检测
-		p, q = randomness.DiscreteFourierTransformTest(bits)
+		p, q = randomness.DiscreteFourierTransformTestBitSeq(bits)
 		testItems = append(testItems, TestItem{PValue: p, QValue: q, TestName: "离散傅里叶检测"})
 		log.Printf("[%s] 离散傅里叶检测 P: %.5f Q: %.5f", filename, p, q)
 

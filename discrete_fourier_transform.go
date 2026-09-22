@@ -12,7 +12,6 @@ package randomness
 
 import (
 	"math"
-	"math/cmplx"
 	"sync"
 
 	"github.com/Trisia/randomness/fft"
@@ -33,18 +32,6 @@ const (
 	// LargeScale 大规模：10^8 bit
 	LargeScale = 100000000
 )
-
-//// 预置FFT表，初始化常见规模的FFT
-//func init() {
-//	// 预置常见规模的FFT表
-//	scales := []int{SmallScale, MediumScale, LargeScale}
-//	for _, scale := range scales {
-//		n := ceilPow2(scale)
-//		if f, err := fft.New(n); err == nil {
-//			fftCache[n] = f
-//		}
-//	}
-//}
 
 // getFFT 获取FFT实例，优先使用缓存的预置表
 func getFFT(n int) (fft.FFT, error) {
@@ -72,15 +59,85 @@ func getFFT(n int) (fft.FFT, error) {
 	return f, nil
 }
 
+// coreDiscreteFourierTransform 是离散傅里叶检测的实现（packed 内核）。
+func coreDiscreteFourierTransform(s BitSeq) (float64, float64) {
+	n := s.n
+	if n == 0 {
+		panic("please provide test bits")
+	}
+
+	N := ceilPow2(n)
+	// 统计区间是 [0, n/2-1)
+	limit := n/2 - 1
+	N_1 := 0
+
+	// limit > 0 时执行变换；n <= 3 时区间为空，无需变换。
+	if limit > 0 {
+		H := N >> 1
+		z := make([]complex128, H)
+		for j := 0; j < H; j++ {
+			var re, im float64
+			if i := 2 * j; i < n {
+				if s.bit(i) == 1 {
+					re = 1
+				} else {
+					re = -1
+				}
+			}
+			if i := 2*j + 1; i < n {
+				if s.bit(i) == 1 {
+					im = 1
+				} else {
+					im = -1
+				}
+			}
+			z[j] = complex(re, im)
+		}
+
+		f, err := getFFT(H)
+		if err != nil {
+			panic(err)
+		}
+		f.Transform(z)
+
+		// Step 4, 5
+		W0 := complex(math.Cos(-2*math.Pi/float64(N)), math.Sin(-2*math.Pi/float64(N)))
+		T2 := 2.995732274 * float64(n) // T = sqrt(2.995732274*n)，比较平方避免开方
+		for k := 0; k < limit; k++ {
+			zk := z[k]
+			zr, zi := real(zk), imag(zk)
+			mr, mi := real(z[(H-k)%H]), -imag(z[(H-k)%H])
+			Pr, Pi := zr+mr, zi+mi
+			Mr, Mi := zr-mr, zi-mi
+			W := f.E[k>>1]
+			if k&1 == 1 {
+				W *= W0
+			}
+			Qr := real(W)*Mr - imag(W)*Mi
+			Qi := real(W)*Mi + imag(W)*Mr
+			re := Pr + Qi
+			im := Pi - Qr
+			if (re*re+im*im)/4 < T2 {
+				N_1++
+			}
+		}
+	}
+
+	// Step 5, 7
+	N_0 := 0.95 * float64(n) / 2
+	V := (float64(N_1) - N_0) / math.Sqrt(0.95*0.05*float64(2.0*n)/3.8)
+	return math.Erfc(math.Abs(V)), math.Erfc(V) / 2
+}
+
 // DiscreteFourierTransform 离散傅里叶检测
 func DiscreteFourierTransform(data []byte) *TestResult {
-	p, q := DiscreteFourierTransformTestBytes(data)
+	p, q := coreDiscreteFourierTransform(BitSeqFromBytes(data))
 	return &TestResult{Name: "离散傅里叶检测", P: p, Q: q, Pass: p >= Alpha}
 }
 
 // DiscreteFourierTransformTestBytes 离散傅里叶检测
 func DiscreteFourierTransformTestBytes(data []byte) (float64, float64) {
-	return DiscreteFourierTransformTest(B2bitArr(data))
+	return coreDiscreteFourierTransform(BitSeqFromBytes(data))
 }
 
 // DiscreteFourierTransformTest 离散傅里叶检测
@@ -88,196 +145,22 @@ func DiscreteFourierTransformTestBytes(data []byte) (float64, float64) {
 // 到尖峰高度，根据随机性的假设，这个尖峰高度不能超过某个门限值（与序列长度狀有关），否则将其归
 // 入不正常的范围；如果不正常的尖峰个数超过了允许值，即可认为待检序列是不随机的。
 // 根据GMT 0005-2021规范，常见数据检测规模为10^8、10^6、2*10^4 bit
+//
+// Deprecated: 请改用 DiscreteFourierTransformTestBitSeq——本函数接受 []bool（1 字节/位），并在内部再打包成 BitSeq，
+// 同一份数据被转换两次。推荐写法是转换一次后复用：
+// s := randomness.BitSeqFromBytes(buf)，之后调用 DiscreteFourierTransformTestBitSeq 系列。
+// 若手上已经是 []bool，可用 randomness.BitSeqFromBools 转换一次后同样复用。
 func DiscreteFourierTransformTest(bits []bool) (float64, float64) {
-	n := len(bits)
-	if n == 0 {
-		panic("please provide test bits")
-	}
-
-	// 根据GMT 0005-2021规范的数据规模选择优化策略
-	switch {
-	case n >= LargeScale:
-		return discreteFourierTransformTestOptimized(bits, true)
-	case n >= MediumScale:
-		return discreteFourierTransformTestOptimized(bits, false)
-	case n >= SmallScale:
-		return discreteFourierTransformTestOptimized(bits, false)
-	default:
-		// 小于2*10^4 bit的数据使用标准算法
-		return discreteFourierTransformTestSmall(bits)
-	}
+	return coreDiscreteFourierTransform(BitSeqFromBools(bits))
 }
 
-// discreteFourierTransformTest 离散傅里叶检测，非分块处理版本
-func discreteFourierTransformTest(bits []bool) (float64, float64) {
-	n := len(bits)
-	if n == 0 {
-		panic("please provide test bits")
-	}
-
-	// Step 1, 2
-	N := ceilPow2(n)
-	rr := make([]complex128, N)
-	for i := 0; i < n; i++ {
-		if bits[i] {
-			rr[i] = complex(1.0, 0)
-		} else {
-			rr[i] = complex(-1.0, 0)
-		}
-	}
-
-	// 傅里叶变换
-	f, err := fft.New(N)
-	if err != nil {
-		panic(err)
-	}
-	f.Transform(rr)
-
-	// Step 4
-	T := math.Sqrt(2.995732274 * float64(n))
-
-	// Step 5
-	N_0 := 0.95 * float64(n) / 2
-
-	// Step 6
-	var N_1 int = 0
-	for i := 0; i < n/2-1; i++ {
-		if cmplx.Abs(rr[i]) < T {
-			N_1++
-		}
-	}
-
-	// Step 7
-	V := (float64(N_1) - N_0) / math.Sqrt(0.95*0.05*float64(2.0*n)/3.8)
-	P := math.Erfc(math.Abs(V))
-	Q := math.Erfc(V) / 2
-
-	return P, Q
+// DiscreteFourierTransformBitSeq 离散傅里叶检测
+func DiscreteFourierTransformBitSeq(s BitSeq) *TestResult {
+	p, q := coreDiscreteFourierTransform(s)
+	return &TestResult{Name: "离散傅里叶检测", P: p, Q: q, Pass: p >= Alpha}
 }
 
-// discreteFourierTransformTestSmall 小数据集的优化实现
-func discreteFourierTransformTestSmall(bits []bool) (float64, float64) {
-	n := len(bits)
-
-	// Step 1, 2
-	N := ceilPow2(n)
-	rr := make([]complex128, N)
-
-	// 优化数据转换：使用预分配的常量
-	ones := complex(1.0, 0)
-	minusOnes := complex(-1.0, 0)
-
-	for i := 0; i < n; i++ {
-		if bits[i] {
-			rr[i] = ones
-		} else {
-			rr[i] = minusOnes
-		}
-	}
-
-	// 傅里叶变换
-	f, err := fft.New(N)
-	if err != nil {
-		panic(err)
-	}
-	f.Transform(rr)
-
-	// Step 4 - 预计算常量
-	T := math.Sqrt(2.995732274 * float64(n))
-
-	// Step 5
-	N_0 := 0.95 * float64(n) / 2
-
-	// Step 6 - 优化循环，避免重复计算
-	var N_1 int = 0
-	T_squared := T * T
-	limit := n/2 - 1
-
-	for i := 0; i < limit; i++ {
-		// 使用平方比较避免开方运算
-		real := real(rr[i])
-		imag := imag(rr[i])
-		if real*real+imag*imag < T_squared {
-			N_1++
-		}
-	}
-
-	// Step 7 - 预计算分母
-	denominator := math.Sqrt(0.95 * 0.05 * float64(2.0*n) / 3.8)
-	V := (float64(N_1) - N_0) / denominator
-	P := math.Erfc(math.Abs(V))
-	Q := math.Erfc(V) / 2
-
-	return P, Q
-}
-
-// discreteFourierTransformTestOptimized 优化的离散傅里叶检测实现
-// 使用预置FFT表加速，支持GMT 0005-2021规范的数据规模
-func discreteFourierTransformTestOptimized(bits []bool, isLargeScale bool) (float64, float64) {
-	n := len(bits)
-
-	// Step 1, 2 - 计算最接近的2的幂次
-	N := ceilPow2(n)
-	rr := make([]complex128, N)
-
-	// 优化数据转换：使用预分配常量和批量处理
-	ones := complex(1.0, 0)
-	minusOnes := complex(-1.0, 0)
-
-	// 根据数据规模选择不同的批量大小
-	batchSize := 1024
-	if isLargeScale {
-		batchSize = 8192 // 大规模数据使用更大的批量
-	}
-
-	// 批量转换数据
-	for i := 0; i < n; i += batchSize {
-		end := i + batchSize
-		if end > n {
-			end = n
-		}
-
-		for j := i; j < end; j++ {
-			if bits[j] {
-				rr[j] = ones
-			} else {
-				rr[j] = minusOnes
-			}
-		}
-	}
-
-	// 使用预置FFT表进行傅里叶变换
-	f, err := getFFT(N)
-	if err != nil {
-		panic(err)
-	}
-	f.Transform(rr)
-
-	// Step 4 - 预计算常量
-	T := math.Sqrt(2.995732274 * float64(n))
-
-	// Step 5
-	N_0 := 0.95 * float64(n) / 2
-
-	// Step 6 - 优化循环计算
-	var N_1 int = 0
-	limit := n/2 - 1
-	T_squared := T * T // 避免重复计算平方
-
-	for i := 0; i < limit; i++ {
-		// 使用平方比较避免开方运算
-		real := real(rr[i])
-		imag := imag(rr[i])
-		if real*real+imag*imag < T_squared {
-			N_1++
-		}
-	}
-
-	// Step 7 - 预计算分母
-	denominator := math.Sqrt(0.95 * 0.05 * float64(2.0*n) / 3.8)
-	V := (float64(N_1) - N_0) / denominator
-	P := math.Erfc(math.Abs(V))
-	Q := math.Erfc(V) / 2
-
-	return P, Q
+// DiscreteFourierTransformTestBitSeq 离散傅里叶检测
+func DiscreteFourierTransformTestBitSeq(s BitSeq) (float64, float64) {
+	return coreDiscreteFourierTransform(s)
 }

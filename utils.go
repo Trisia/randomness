@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"math"
 	"os"
-	"strings"
 )
 
 const (
@@ -16,19 +15,6 @@ const (
 	big    float64 = 4.503599627370496e15
 	MACHEP float64 = 1.11022302462515654042e-16
 )
-
-func subsequencepattern(bits []bool, m int) int {
-	tmp := 0
-	var b bool
-	for j := 0; j < m; j++ {
-		tmp <<= 1
-		b, bits = bits[0], bits[1:]
-		if b {
-			tmp++
-		}
-	}
-	return tmp
-}
 
 func igam(a, x float64) float64 {
 	var ans, ax, c, r float64
@@ -65,9 +51,10 @@ func igam(a, x float64) float64 {
 	return ans * ax / a
 }
 
+// logGamma 返回 log|Γ(x)|。
 func logGamma(x float64) float64 {
-	res, sign := math.Lgamma(x)
-	return res * float64(sign)
+	res, _ := math.Lgamma(x)
+	return res
 }
 
 func Igamc(a, x float64) float64 {
@@ -138,66 +125,43 @@ func normal_CDF(x float64) float64 {
 	return (1 + math.Erf(x/math.Sqrt(2))) / 2
 }
 
-func rank(matrix [][]int, m int) int {
-	temp := make([][]int, m)
-	for i := 0; i < m; i++ {
-		temp[i] = make([]int, m)
-		for j := 0; j < m; j++ {
+// rank 计算 GF(2) 上 M 行 Q 列矩阵的秩。
+func rank(matrix [][]int, M, Q int) int {
+	temp := make([][]int, M)
+	for i := 0; i < M; i++ {
+		temp[i] = make([]int, Q)
+		for j := 0; j < Q; j++ {
 			temp[i][j] = matrix[i][j]
 		}
 	}
 
-	rowEchelon(temp, m)
-	rank := 0
-	for i := 0; i < m; i++ {
-		notZero := false
-		for j := 0; j < m; j++ {
-			if temp[i][j] != 0 {
-				notZero = true
-			}
-		}
-		if notZero {
-			rank++
-		}
-	}
-	return rank
-}
-
-func rowEchelon(matrix [][]int, m int) {
-	pivotstartrow := 0
-	pivotstartcol := 0
-	pivotrow := 0
-	for i := 0; i < m; i++ {
-		found := false
-		for k := pivotstartrow; k < m; k++ {
-			if matrix[k][pivotstartcol] == 1 {
-				found = true
-				pivotrow = k
+	pivot := 0
+	for col := 0; col < Q && pivot < M; col++ {
+		sel := -1
+		for r := pivot; r < M; r++ {
+			if temp[r][col] == 1 {
+				sel = r
 				break
 			}
 		}
-		if found {
-			if pivotrow != pivotstartrow {
-				for k := 0; k < m; k++ {
-					matrix[pivotrow][k] ^= matrix[pivotstartrow][k]
-					matrix[pivotstartrow][k] ^= matrix[pivotrow][k]
-					matrix[pivotrow][k] ^= matrix[pivotstartrow][k]
-				}
-			}
-			for j := pivotstartrow + 1; j < m; j++ {
-				if matrix[j][pivotstartcol] == 1 {
-					for k := 0; k < m; k++ {
-						matrix[j][k] = matrix[pivotstartrow][k] ^ matrix[j][k]
-					}
-				}
-			}
-
-			pivotstartcol += 1
-			pivotstartrow += 1
-		} else {
-			pivotstartcol += 1
+		if sel < 0 {
+			continue
 		}
+		if sel != pivot {
+			temp[sel], temp[pivot] = temp[pivot], temp[sel]
+		}
+		// 消去主元行以下的同列 1；主元行本身之后不再被使用，
+		// 因此无需回代——非零行数即秩。
+		for r := pivot + 1; r < M; r++ {
+			if temp[r][col] == 1 {
+				for j := col; j < Q; j++ {
+					temp[r][j] ^= temp[pivot][j]
+				}
+			}
+		}
+		pivot++
 	}
+	return pivot
 }
 
 func linearComplexity(a []bool, M int) int {
@@ -264,31 +228,6 @@ func b2i(b bool) int {
 	return 0
 }
 
-func pow2DoubleArr(data []float64) []float64 {
-	// 创建新数组
-	var newData []float64
-
-	dataLength := len(data)
-
-	sumNum := 2
-	for sumNum < dataLength {
-		sumNum = sumNum * 2
-	}
-	addLength := sumNum - dataLength
-
-	if addLength != 0 {
-		newData = make([]float64, sumNum)
-		copy(newData, data)
-		for i := dataLength; i < sumNum; i++ {
-			newData[i] = 0
-		}
-	} else {
-		newData = data
-	}
-
-	return newData
-}
-
 func ceilPow2(N int) int {
 	i := 2
 	for {
@@ -337,32 +276,7 @@ func B2Byte(arr []bool) byte {
 	return res
 }
 
-func xor(x, y bool) bool {
-	return x != y
-}
-
-func max(x, y int) int {
-	if x > y {
-		return x
-	}
-	return y
-}
-
-func abs(x int) int {
-	if x > 0 {
-		return x
-	}
-	return -x
-}
-
-func min(x, y int) int {
-	if x < y {
-		return x
-	}
-	return y
-}
-
-// B2bitArr 转换字节数组为比特序列
+// B2bitArr 转换字节数组为比特序列。
 func B2bitArr(src []byte) []bool {
 	n := len(src) * 8
 	res := make([]bool, n)
@@ -381,82 +295,97 @@ func B2bitArr(src []byte) []bool {
 	return res
 }
 
-// GroupBit 生成一组 10^6 比特的检测序列
-func GroupBit() []bool {
-	return GroupSecBit()
-}
-
-// GroupSecBit 生成一组测试数据 长度为 10^6 比特
-func GroupSecBit() []bool {
-	n := 1000000
-	bits := make([]bool, 0, n)
-	buf := make([]byte, n/8)
-	_, _ = rand2.Read(buf)
-	for _, b := range buf {
-		bits = append(bits, B2bit(b)...)
+// GroupBitSeq 生成一组 nbits 比特的随机检测序列，返回 BitSeq。
+func GroupBitSeq(nbits int) (BitSeq, error) {
+	if nbits < 0 {
+		nbits = 0
 	}
-	return bits
+	buf := make([]byte, (nbits+7)/8)
+	if _, err := rand2.Read(buf); err != nil {
+		return BitSeq{}, err
+	}
+	return BitSeqFromBytes(buf).truncate(nbits), nil
 }
 
-// ReadGroup 从文件中读取一组二元序列
-func ReadGroup(filename string) []bool {
-	n := 1000000
-	bits := make([]bool, 0, n)
+// ReadGroupBitSeq 从文件（每字节 8 位，MSB 优先）读取一组二元序列，返回 BitSeq。
+func ReadGroupBitSeq(filename string) (BitSeq, error) {
 	buf, err := ioutil.ReadFile(filename)
 	if err != nil {
-		panic(err)
+		return BitSeq{}, err
 	}
-	for _, b := range buf {
-		bits = append(bits, B2bit(b)...)
-	}
-	return bits
+	return BitSeqFromBytes(buf), nil
 }
 
-// ReadGroupInASCIIFormat
-func ReadGroupInASCIIFormat(filename string) []bool {
+// ReadGroupInASCIIFormatBitSeq 从 ASCII 格式文件（每行若干 0/1 字符）读取
+// 一组二元序列；非 0/1 字符（空白、换行等）会被跳过。
+//
+// nbits > 0：只读取前 nbits 位，文件中可用位不足时返回错误。
+// nbits <= 0：读取文件中的全部位。
+func ReadGroupInASCIIFormatBitSeq(filename string, nbits int) (BitSeq, error) {
 	file, err := os.Open(filename)
 	if err != nil {
-		panic(err)
+		return BitSeq{}, err
 	}
 	defer file.Close()
-	n := 1000000
-	bits := make([]bool, n)
-	var b int
-	var num_0s, num_1s, bitsRead int
-	r := bufio.NewReader(file)
-	for {
-		line, err := r.ReadBytes('\n')
+
+	r := bufio.NewReaderSize(file, 64*1024)
+	var words []uint64
+	var cur uint64
+	var cnt uint
+	total := 0
+	for nbits <= 0 || total < nbits {
+		b, err := r.ReadByte()
 		if err != nil {
 			break
 		}
-		rr := strings.NewReader(string(line))
-		for {
-			_, err = fmt.Fscanf(rr, "%1d", &b)
-			if err == nil {
-				if b != 0 {
-					bits[bitsRead] = true
-					num_1s++
-				} else {
-					bits[bitsRead] = false
-					num_0s++
-				}
-				bitsRead++
-				if bitsRead == n {
-					break
-				}
-			} else {
-				break
-			}
+		if b != '0' && b != '1' {
+			continue
 		}
-		if bitsRead == n {
-			break
+		if b == '1' {
+			cur |= 1 << cnt
+		}
+		cnt++
+		total++
+		if cnt == 64 {
+			words = append(words, cur)
+			cur, cnt = 0, 0
 		}
 	}
-
-	fmt.Printf("BITSREAD = %d 0s = %d 1s = %d\n", bitsRead, num_0s, num_1s)
-
-	if bitsRead != n {
-		panic("not enough bits readed")
+	if cnt > 0 {
+		words = append(words, cur)
 	}
-	return bits
+	if nbits > 0 && total < nbits {
+		return BitSeq{}, fmt.Errorf("%s 仅含 %d 位，不足所需的 %d 位", filename, total, nbits)
+	}
+	return BitSeq{u: words, n: total}, nil
+}
+
+// GroupBit 生成一组 10^6 比特的检测序列。
+func GroupBit() []bool {
+	s, _ := GroupBitSeq(1000000)
+	return s.ToBools()
+}
+
+// GroupSecBit 生成一组测试数据 长度为 10^6 比特。
+func GroupSecBit() []bool {
+	return GroupBit()
+}
+
+// ReadGroup 从文件中读取一组二元序列。
+func ReadGroup(filename string) []bool {
+	s, err := ReadGroupBitSeq(filename)
+	if err != nil {
+		panic(err)
+	}
+	return s.ToBools()
+}
+
+// ReadGroupInASCIIFormat 从 ASCII 格式文件读取 10^6 bit 的二元序列。
+func ReadGroupInASCIIFormat(filename string) []bool {
+	const n = 1000000
+	s, err := ReadGroupInASCIIFormatBitSeq(filename, n)
+	if err != nil {
+		panic(err)
+	}
+	return s.ToBools()
 }

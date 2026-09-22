@@ -30,7 +30,8 @@ func FactoryDetect(source io.Reader) (bool, error) {
 		if err != nil {
 			return false, err
 		}
-		resArr := Round15(buf)
+		// 每个样本只做一次 []byte -> BitSeq 转换，15 项检测复用同一个序列。
+		resArr := Round15BitSeq(randomness.BitSeqFromBytes(buf))
 		for idx, result := range resArr {
 			distributions[idx][i] = result.Q
 			if result.Pass {
@@ -65,7 +66,8 @@ func PowerOnDetect(source io.Reader) (bool, error) {
 		if err != nil {
 			return false, err
 		}
-		resArr := Round15(buf)
+		// 每个样本只做一次 []byte -> BitSeq 转换，15 项检测复用同一个序列。
+		resArr := Round15BitSeq(randomness.BitSeqFromBytes(buf))
 		for idx, result := range resArr {
 			distributions[idx][i] = result.Q
 			if result.Pass {
@@ -101,7 +103,7 @@ func PeriodDetect(source io.Reader) (bool, error) {
 		if err != nil {
 			return false, err
 		}
-		resArr := Round12(buf)
+		resArr := Round12BitSeq(randomness.BitSeqFromBytes(buf))
 		for idx, result := range resArr {
 			distributions[idx][i] = result.Q
 			if result.Pass {
@@ -123,7 +125,7 @@ func PeriodDetect(source io.Reader) (bool, error) {
 	return true, nil
 }
 
-// SingleDetect 单次检测，单根据实际应用时每次才随机数的大小确定，检测采用扑克检测
+// SingleDetect 单次检测，根据实际应用时每次随机数的大小确定，采用扑克检测。
 // source: 随机源
 // numByte: 采集字节数，不能小于16
 func SingleDetect(source io.Reader, numByte int) (bool, error) {

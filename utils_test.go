@@ -1,9 +1,6 @@
 package randomness
 
 import (
-	"crypto/rand"
-	"io/ioutil"
-	"os"
 	"reflect"
 	"testing"
 )
@@ -82,20 +79,15 @@ func TestB2Byte(t *testing.T) {
 	}
 }
 
+// GroupBit 只是「10^6 位随机比特」的便捷入口，这里只校验长度契约。
+// 历史上它会顺手把数据写成仓库内的 data/data.bin，污染工作区且让测试产生
+// 隐式依赖；现在不再落盘，需要确定性数据时请用 NewDetRand。
 func TestGroupBit(t *testing.T) {
 	bits := GroupBit()
-	var tmp []bool
-	var buf []byte
-	for {
-		if len(bits) < 8 {
-			break
-		}
-		tmp, bits = bits[:8], bits[8:]
-		buf = append(buf, B2Byte(tmp))
+	if len(bits) != 1000000 {
+		t.Fatalf("GroupBit 返回 %d 位，期望 1000000", len(bits))
 	}
-	_, _ = rand.Read(buf)
-	err := ioutil.WriteFile("data/data.bin", buf, os.ModePerm)
-	if err != nil {
-		t.Fatal(err)
+	if got := len(GroupSecBit()); got != len(bits) {
+		t.Fatalf("GroupSecBit 返回 %d 位，期望 %d", got, len(bits))
 	}
 }
