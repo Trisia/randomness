@@ -69,12 +69,9 @@ func main() {
 }
 ```
 
-### BitSeq：一次转换，多项复用（推荐）
+### 数据检测建议
 
-要对同一段数据跑多项检测时，请先用构造器把字节打包成 `randomness.BitSeq`，
-再调用 `XxxTestBitSeq` / `XxxBitSeq` 系列。`BitSeq` 是位序列的紧凑表示
-（1 位/比特，即 `[]bool` 的 1/8 内存），也是库内全部 15 种检测的算法内核
-实际接受的类型。
+推荐使用 `BitSeq` 后缀的接口来实现同一组数据的多次检测，可以有效的减少数据转换和内存占用。（例如：`RunsTestBytes` 对应 `RunsTestBitSeq`）
 
 ```go
 package main
@@ -111,31 +108,8 @@ func main() {
 }
 ```
 
-> **为什么推荐这个用法**：若改用 `B2bitArr` + `XxxProto` / `XxxTest` 的组合，
-> 同一段数据会先被展开成 `[]bool`（1 字节/位），随后每项检测内部还要把它
-> 重新打包一次——一轮检测里同一份数据被反复转换十余遍。在 10^8 bit 规模下，
-> 这相当于常驻 100MB 的展开数组加上十余次的重复转换。
 
-`BitSeq` 提供的公开操作：
-
-| 操作 | 说明 |
-|---|---|
-| `NewBitSeqFromBytes(data)` / `BitSeqFromBytes(data)` | 从 `[]byte` 构造（构造器风格与函数风格，两者等价） |
-| `BitSeqFromBools(bs)` | 从 `[]bool` 构造 |
-| `NewBitSeq(nbits)` | 构造长度为 `nbits` 的全 0 序列 |
-| `ReadBitSeqFromFile(filename)` | 从文件读取二进制字节构造 |
-| `Len()` | 返回序列长度（比特数） |
-| `Bit(i)` | 返回第 i 位的值；越界返回 `false` |
-| `Set(i, v)` | 设置第 i 位；越界不操作 |
-| `Ones()` | 返回全部有效位中 1 的个数 |
-| `OnesInRange(lo, hi)` | 返回 `[lo, hi)` 区间内 1 的个数 |
-| `ToBools()` | 展开为 `[]bool` |
-| `ToBytes()` | 按 MSB 优先打包为 `[]byte` |
-| `Copy()` | 深拷贝（独立底层存储） |
-
-位序与 `B2bitArr` 完全一致，因此两者可以自由互换。
-
-需要生成可复现的测试数据时，可使用 `rdgen -seed <非0>`（见其 README）。
+`BitSeq`提供了多种方法，您可以实现多种数据类型自由转换和数据的随机访问。
 
 更多 API 使用方法见：[randomness API 文档](https://pkg.go.dev/github.com/Trisia/randomness)
 
@@ -153,11 +127,6 @@ func main() {
 使用方法见 [测试用例 detect_test.go](detect/detect_test.go)
 
 如果您的主机处理器含有多个核心，那么可以使用 Fast 系列的 API 来加速检测，见 [测试用例 detect_fast_test.go](detect/detect_fast_test.go)
-
-> 注意：离散傅里叶检测在 10^8 bit 规模下单次检测约需 **2.05 GB** 峰值内存（用 `rddetector` 实测 `Maximum resident set size`）——实数打包后的数据为 `2^26` 个 `complex128`（约 1.0 GB），FFT 根表约 1.0 GB，输入 `BitSeq` 约 12.5 MB。若并发执行多次检测请相应控制并发数，防止内存溢出（OOM）。
->
-> 同一份数据若沿用旧的 `B2bitArr` + 全长复数 FFT 路径，峰值约为 **5.1 GB**。
-> 10^6 bit 规模下单次约需 8.5 MB。文本此前标注的 "1024MB" 系更早实现的数据，已按实测更正。
 
 ## 发展
 
