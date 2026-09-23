@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -28,14 +29,18 @@ func TestWorkersProduceReport(t *testing.T) {
 	for _, tc := range cases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			dir := t.TempDir()
+			dir, err := ioutil.TempDir("", "worker-test")
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer os.RemoveAll(dir)
 			const files = 2
 			paths := make([]string, 0, files)
 			for i := 0; i < files; i++ {
 				p := filepath.Join(dir, "random"+strconv.Itoa(i)+".bin")
 				// 每个文件用独立种子，避免两份完全相同的数据
 				data := randomness.NewDetRand(uint64(i) + 100).RawBytes(tc.bytes)
-				if err := os.WriteFile(p, data, os.FileMode(0600)); err != nil {
+				if err := ioutil.WriteFile(p, data, 0600); err != nil {
 					t.Fatal(err)
 				}
 				paths = append(paths, p)
@@ -102,10 +107,14 @@ func TestWorkersProduceReport(t *testing.T) {
 
 // 同一种子、同一参数下 worker 结果必须完全一致（确定性数据 + 确定性算法）。
 func TestWorkerDeterministic(t *testing.T) {
-	dir := t.TempDir()
+	dir, err := ioutil.TempDir("", "worker-det")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(dir)
 	p := filepath.Join(dir, "a.bin")
 	data := randomness.NewDetRand(20240920).RawBytes(20000 / 8)
-	if err := os.WriteFile(p, data, os.FileMode(0600)); err != nil {
+	if err := ioutil.WriteFile(p, data, 0600); err != nil {
 		t.Fatal(err)
 	}
 
@@ -141,20 +150,24 @@ func TestWorkerDeterministic(t *testing.T) {
 
 // toBeTestFileNum 只统计 .bin/.dat 文件，并取最大文件长度作为样本规模。
 func TestToBeTestFileNum(t *testing.T) {
-	dir := t.TempDir()
+	dir, err := ioutil.TempDir("", "work-test-fnum")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(dir)
 	must := func(name string, n int) {
-		if err := os.WriteFile(filepath.Join(dir, name), make([]byte, n), os.FileMode(0600)); err != nil {
+		if err := ioutil.WriteFile(filepath.Join(dir, name), make([]byte, n), 0600); err != nil {
 			t.Fatal(err)
 		}
 	}
 	must("a.bin", 2500)   // 20000 bit
 	must("b.dat", 125000) // 1000000 bit
 	must("c.txt", 10)     // 应被忽略
-	if err := os.MkdirAll(filepath.Join(dir, "sub"), os.FileMode(0755)); err != nil {
+	if err := os.MkdirAll(filepath.Join(dir, "sub"), 0755); err != nil {
 		t.Fatal(err)
 	}
 	must2 := func(name string, n int) {
-		if err := os.WriteFile(filepath.Join(dir, "sub", name), make([]byte, n), os.FileMode(0600)); err != nil {
+		if err := ioutil.WriteFile(filepath.Join(dir, "sub", name), make([]byte, n), 0600); err != nil {
 			t.Fatal(err)
 		}
 	}

@@ -1,6 +1,7 @@
 package randomness
 
 import (
+	"io/ioutil"
 	"math/bits"
 	"os"
 	"path/filepath"
@@ -245,8 +246,13 @@ func TestReadBitSeqFromFile(t *testing.T) {
 	data := NewDetRand(99).RawBytes(500)
 	want := BitSeqFromBytes(data)
 
-	tmpFile := filepath.Join(t.TempDir(), "test.bin")
-	if err := os.WriteFile(tmpFile, data, 0644); err != nil {
+	tmpDir, err := ioutil.TempDir("", "bitseq-test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(tmpDir)
+	tmpFile := filepath.Join(tmpDir, "test.bin")
+	if err := ioutil.WriteFile(tmpFile, data, 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -269,8 +275,13 @@ func TestReadBitSeqFromFile(t *testing.T) {
 
 // ReadBitSeqFromFile 对空文件也能正常处理。
 func TestReadBitSeqFromFileEmpty(t *testing.T) {
-	tmpFile := filepath.Join(t.TempDir(), "empty.bin")
-	if err := os.WriteFile(tmpFile, []byte{}, 0644); err != nil {
+	tmpDir, err := ioutil.TempDir("", "bitseq-empty")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(tmpDir)
+	tmpFile := filepath.Join(tmpDir, "empty.bin")
+	if err := ioutil.WriteFile(tmpFile, []byte{}, 0644); err != nil {
 		t.Fatal(err)
 	}
 	got, err := ReadBitSeqFromFile(tmpFile)
